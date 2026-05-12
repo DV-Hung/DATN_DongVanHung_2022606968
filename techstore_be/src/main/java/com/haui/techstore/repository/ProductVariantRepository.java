@@ -17,7 +17,9 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
 
     long countByProductId(Long productId);
 
-    Optional<ProductVariant> findByProductIdAndColor(Long productId, String color);
+    Optional<ProductVariant> findByRomAndColor(String rom, String color);
+
+    Optional<ProductVariant> findByProductIdAndRomAndColor(Long productId, String rom, String color);
 
     @Query("SELECT pv FROM ProductVariant pv WHERE pv.stockQuantity > 0 AND pv.product.id = :productId")
     List<ProductVariant> findAvailableVariants(@Param("productId") Long productId);

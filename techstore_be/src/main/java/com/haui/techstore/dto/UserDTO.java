@@ -26,6 +26,7 @@ public class UserDTO {
     @NotBlank(message = "Full name is required")
     private String fullName;
 
+    @NotBlank(message = "Phone number is required")
     private String phone;
 
     private String address;

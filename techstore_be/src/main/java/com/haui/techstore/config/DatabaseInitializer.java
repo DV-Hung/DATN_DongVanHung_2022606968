@@ -1,6 +1,7 @@
 package com.haui.techstore.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -10,12 +11,14 @@ import com.haui.techstore.repository.CategoryRepository;
 import com.haui.techstore.repository.UserRepository;
 
 @Service
+@Profile("!test")
 public class DatabaseInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DatabaseInitializer(UserRepository userRepository, CategoryRepository categoryRepository, PasswordEncoder passwordEncoder) {
+    public DatabaseInitializer(UserRepository userRepository, CategoryRepository categoryRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
@@ -24,14 +27,14 @@ public class DatabaseInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println(">>> START INIT DATABASE");
-        
+
         // Initialize categories
         initializeCategories();
-        
+
         // Initialize admin user
-        if (this.userRepository.findByEmail("admin1@gmail.com").isEmpty()) {
+        if (this.userRepository.findByEmail("admin@gmail.com").isEmpty()) {
             User user = new User();
-            user.setEmail("admin1@gmail.com");
+            user.setEmail("admin@gmail.com");
             user.setPassword(this.passwordEncoder.encode("123456"));
             user.setFullName("Admin");
             user.setRole("ADMIN");
@@ -43,13 +46,13 @@ public class DatabaseInitializer implements CommandLineRunner {
     }
 
     private void initializeCategories() {
-        String[] categoryNames = {"Laptop", "Điện thoại", "Phụ kiện"};
+        String[] categoryNames = { "Laptop", "Điện thoại", "Phụ kiện" };
         String[] categoryDescriptions = {
-            "Các sản phẩm laptop và máy tính xách tay",
-            "Các sản phẩm điện thoại di động",
-            "Các sản phẩm phụ kiện công nghệ"
+                "Các sản phẩm laptop và máy tính xách tay",
+                "Các sản phẩm điện thoại di động",
+                "Các sản phẩm phụ kiện công nghệ"
         };
-        String[] categorySlugs = {"laptop", "dien-thoai", "phu-kien"};
+        String[] categorySlugs = { "laptop", "dien-thoai", "phu-kien" };
 
         for (int i = 0; i < categoryNames.length; i++) {
             if (this.categoryRepository.findByName(categoryNames[i]).isEmpty()) {
