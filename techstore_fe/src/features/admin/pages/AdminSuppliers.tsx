@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../../layouts/AdminLayout';
 import { useAdminSuppliers, type AdminSupplier } from '../hooks';
 
-interface FormData extends Omit<AdminSupplier, 'id'> {
+interface FormData {
   id?: string | number;
+  name: string;
+  phone: string;
+  address: string;
+  status: 'Active' | 'Inactive';
 }
 
 export const AdminSuppliers: React.FC = () => {
@@ -22,17 +26,17 @@ export const AdminSuppliers: React.FC = () => {
   const [editingSupplier, setEditingSupplier] = useState<AdminSupplier | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string | number; name: string } | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    contactDetails: '',
+    phone: '',
+    address: '',
     status: 'Active',
   });
 
   const [filters, setFilters] = useState({
     status: 'All Status',
   });
-
-  const statuses = ['All Status', 'Active', 'Inactive'];
 
   const filteredSuppliers = useMemo(() => {
     return suppliers.filter((supplier) => {
@@ -48,7 +52,8 @@ export const AdminSuppliers: React.FC = () => {
       setEditingSupplier(supplier);
       setFormData({
         name: supplier.name,
-        contactDetails: supplier.contactDetails,
+        phone: supplier.phone || '',
+        address: supplier.address || '',
         status: supplier.status,
         id: supplier.id,
       });
@@ -56,7 +61,8 @@ export const AdminSuppliers: React.FC = () => {
       setEditingSupplier(null);
       setFormData({
         name: '',
-        contactDetails: '',
+        phone: '',
+        address: '',
         status: 'Active',
       });
     }
@@ -72,15 +78,19 @@ export const AdminSuppliers: React.FC = () => {
   const validateForm = (): boolean => {
     setFormError(null);
     if (!formData.name.trim()) {
-      setFormError('Supplier name is required');
+      setFormError('Tên nhà cung cấp là bắt buộc');
       return false;
     }
-    if (!formData.contactDetails.trim()) {
-      setFormError('Contact details are required');
+    if (!formData.phone?.trim()) {
+      setFormError('Số điện thoại là bắt buộc');
+      return false;
+    }
+    if (!formData.address?.trim()) {
+      setFormError('Địa chỉ là bắt buộc');
       return false;
     }
     if (!formData.status) {
-      setFormError('Status is required');
+      setFormError('Trạng thái là bắt buộc');
       return false;
     }
     return true;
@@ -95,8 +105,9 @@ export const AdminSuppliers: React.FC = () => {
     try {
       const supplierData = {
         name: formData.name,
-        contactDetails: formData.contactDetails,
-        status: formData.status as 'Active' | 'Inactive',
+        phone: formData.phone,
+        address: formData.address,
+        status: formData.status,
       };
 
       if (editingSupplier) {
@@ -107,21 +118,23 @@ export const AdminSuppliers: React.FC = () => {
       handleCloseModal();
       navigate('/admin/suppliers');
     } catch (err: any) {
-      setFormError(err.message || 'Failed to save supplier');
+      setFormError(err.message || 'Không thể lưu nhà cung cấp');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteSupplier = (id: string | number) => {
-    if (window.confirm('Are you sure you want to delete this supplier?')) {
-      deleteSupplier(id)
-        .then(() => {
-          navigate('/admin/suppliers');
-        })
-        .catch((err) => {
-          alert(`Failed to delete supplier: ${err.message}`);
-        });
+  const handleDeleteSupplier = async (id: string | number) => {
+    setIsSaving(true);
+    try {
+      await deleteSupplier(id);
+      setDeleteConfirm(null);
+      navigate('/admin/suppliers');
+    } catch (err: any) {
+      setFormError(err.message || 'Không thể xóa nhà cung cấp');
+      setDeleteConfirm(null);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -136,7 +149,7 @@ export const AdminSuppliers: React.FC = () => {
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <span className="text-red-600">⚠️</span>
           <div>
-            <p className="font-medium text-red-900">Error</p>
+            <p className="font-medium text-red-900">Lỗi</p>
             <p className="text-sm text-red-700">{error}</p>
           </div>
         </div>
@@ -145,32 +158,30 @@ export const AdminSuppliers: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Supplier Management</h1>
-          <p className="text-gray-600 mt-1">Manage your suppliers and partnerships.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Quản Lý Nhà Cung Cấp</h1>
+          <p className="text-gray-600 mt-1">Quản lý các nhà cung cấp và kỳ hạn hợp tác của bạn.</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
           disabled={isLoading}
         >
-          ➕ Add New Supplier
+          ➕ Thêm Nhà Cung Cấp Mới
         </button>
       </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex gap-4 flex-wrap">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">STATUS</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">TRẠNG THÁI</label>
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
+            <option value="All Status">Tất Cả Trạng Thái</option>
+            <option value="Active">Hoạt Động</option>
+            <option value="Inactive">Không Hoạt Động</option>
           </select>
         </div>
       </div>
@@ -179,7 +190,7 @@ export const AdminSuppliers: React.FC = () => {
       {isLoading && !suppliers.length && (
         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
           <div className="inline-block animate-spin">⏳</div>
-          <p className="mt-2 text-gray-600">Loading suppliers...</p>
+          <p className="mt-2 text-gray-600">Đang tải nhà cung cấp...</p>
         </div>
       )}
 
@@ -191,16 +202,19 @@ export const AdminSuppliers: React.FC = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    SUPPLIER NAME
+                    Tên NHÀ CUNG CẤP
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    CONTACT DETAILS
+                    SỐ ĐIỆN THOẠI
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    STATUS
+                    ĐỊA CHỈ
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    TRẠNG THÁI
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    ACTIONS
+                    HÀNH ĐỘNG
                   </th>
                 </tr>
               </thead>
@@ -212,13 +226,16 @@ export const AdminSuppliers: React.FC = () => {
                         <p className="font-semibold text-gray-900">{supplier.name}</p>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {supplier.contactDetails}
+                        {supplier.phone || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {supplier.address || '-'}
                       </td>
                       <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${supplier.status === 'Active'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-700'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-700'
                             }`}
                         >
                           {supplier.status === 'Active' ? '✓' : '○'} {supplier.status}
@@ -231,14 +248,13 @@ export const AdminSuppliers: React.FC = () => {
                             onClick={() => handleOpenModal(supplier)}
                             className="px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded"
                           >
-                            ✎ Edit
+                            ✎ Chỉnh Sửa
                           </button>
                           <button
-                            onClick={() => handleDeleteSupplier(supplier.id)}
+                            onClick={() => setDeleteConfirm({ id: supplier.id, name: supplier.name })}
                             className="px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded"
-                            disabled={isLoading}
                           >
-                            🗑️ Delete
+                            🗑️ Xóa
                           </button>
                         </div>
                       </td>
@@ -246,8 +262,8 @@ export const AdminSuppliers: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-gray-600">
-                      No suppliers found
+                    <td colSpan={5} className="px-6 py-8 text-center text-gray-600">
+                      Không tìm thấy nhà cung cấp
                     </td>
                   </tr>
                 )}
@@ -258,7 +274,7 @@ export const AdminSuppliers: React.FC = () => {
           {/* Pagination Summary */}
           <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Showing {filteredSuppliers.length} of {suppliers.length} suppliers
+              Hiển thị {filteredSuppliers.length} trong số {suppliers.length} nhà cung cấp
             </p>
           </div>
         </div>
@@ -269,7 +285,7 @@ export const AdminSuppliers: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
+              {editingSupplier ? 'Chỉnh Sửa Nhà Cung Cấp' : 'Thêm Nhà Cung Cấp Mới'}
             </h2>
 
             {formError && (
@@ -281,41 +297,54 @@ export const AdminSuppliers: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Supplier Name
+                  Tên Nhà Cung Cấp
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Supplier name"
+                  placeholder="Tên nhà cung cấp"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Details
+                  Số Điện Thoại *
                 </label>
                 <input
                   type="text"
-                  value={formData.contactDetails}
-                  onChange={(e) => handleInputChange('contactDetails', e.target.value)}
+                  value={formData.phone || ''}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Email, phone, or address"
+                  placeholder="0123456789"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
+                  Địa Chỉ *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address || ''}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Địa chỉ nhà cung cấp"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Trạng Thái
                 </label>
                 <select
                   value={formData.status}
                   onChange={(e) => handleInputChange('status', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="Active">Hoạt Động</option>
+                  <option value="Inactive">Không Hoạt Động</option>
                 </select>
               </div>
 
@@ -328,15 +357,45 @@ export const AdminSuppliers: React.FC = () => {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
                 disabled={isSaving}
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={handleSaveSupplier}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400"
                 disabled={isSaving}
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Đang lưu...' : 'Lưu'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Xác nhận Xóa</h2>
+              <p className="text-gray-600 mb-6">
+                Bạn có chắc chắn muốn xóa nhà cung cấp <strong>{deleteConfirm.name}</strong>? Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={isSaving}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => handleDeleteSupplier(deleteConfirm.id)}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition disabled:opacity-50"
+                >
+                  {isSaving ? 'Đang xóa...' : 'Xóa'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -22,7 +22,19 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    onSearchChange?.(value);
+    // Don't call onSearchChange here - only call on button click
+  };
+
+  const handleSearchSubmit = () => {
+    // Only call API when search button is clicked
+    onSearchChange?.(searchQuery);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Also support Enter key to submit search
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
+    }
   };
 
   const handleLogout = () => {
@@ -72,9 +84,14 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange }) => {
                 placeholder="Tìm kiếm sản phẩm..."
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onKeyPress={handleSearchKeyPress}
                 className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button className="absolute right-3 top-2.5 text-gray-400 hover:text-white">
+              <button
+                type="button"
+                onClick={handleSearchSubmit}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-white transition"
+              >
                 <svg
                   className="w-5 h-5"
                   fill="none"

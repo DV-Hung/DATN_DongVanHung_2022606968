@@ -34,6 +34,11 @@ export const AdminProductVariants: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('color');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string | number;
+    color: string;
+    rom: string;
+  } | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     color: '',
@@ -78,7 +83,7 @@ export const AdminProductVariants: React.FC = () => {
 
   const handleSaveVariant = async (variantData: FormData) => {
     if (!productId) {
-      setFormError('Product ID is required');
+      setFormError('ID sản phẩm là bắt buộc');
       return;
     }
 
@@ -101,7 +106,7 @@ export const AdminProductVariants: React.FC = () => {
         handleAddVariant(variantData);
       }
     } catch (err: any) {
-      setFormError(err.message || 'Failed to save variant');
+      setFormError(err.message || 'Không thể lưu biến thể');
     } finally {
       setIsSaving(false);
     }
@@ -126,13 +131,13 @@ export const AdminProductVariants: React.FC = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setFormError('Please select a valid image file');
+      setFormError('Vui lòng chọn một tập tin hình ảnh hợp lệ');
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setFormError('Image size must be less than 5MB');
+      setFormError('Kích thước hình ảnh phải nhỏ hơn 5MB');
       return;
     }
 
@@ -147,10 +152,10 @@ export const AdminProductVariants: React.FC = () => {
         setFormData({ ...formData, imageUrl: uploadedUrl });
         setImagePreview(uploadedUrl);
       } else {
-        setFormError('Failed to get image URL from upload response');
+        setFormError('Không thể lấy URL hình ảnh từ phản pháp tãi lên');
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to upload image';
+      const errorMessage = err.response?.data?.message || err.message || 'Không thể tải lên hình ảnh';
       setFormError(errorMessage);
       console.error('Image upload error:', err);
     } finally {
@@ -158,11 +163,16 @@ export const AdminProductVariants: React.FC = () => {
     }
   };
 
-  const handleDeleteVariant = (variantId: string | number) => {
-    if (window.confirm('Are you sure you want to delete this variant?')) {
-      deleteVariant(variantId).catch((err) => {
-        setFormError(err.message || 'Failed to delete variant');
-      });
+  const handleDeleteVariant = async (variantId: string | number) => {
+    setIsSaving(true);
+    try {
+      await deleteVariant(variantId);
+      setDeleteConfirm(null);
+    } catch (err: any) {
+      setFormError(err.message || 'Không thể xóa biến thể');
+      setDeleteConfirm(null);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -225,7 +235,7 @@ export const AdminProductVariants: React.FC = () => {
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <span className="text-red-600">⚠️</span>
           <div>
-            <p className="font-medium text-red-900">Error</p>
+            <p className="font-medium text-red-900">Lỗi</p>
             <p className="text-sm text-red-700">{formError}</p>
           </div>
         </div>
@@ -238,7 +248,7 @@ export const AdminProductVariants: React.FC = () => {
             <div className="text-4xl">📱</div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {loadingProduct ? 'Loading...' : (currentProduct?.name || 'Product Variants')}
+                {loadingProduct ? 'Đang tải...' : (currentProduct?.name || 'Biến Thể Sản Phẩm')}
               </h1>
               {currentProduct && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -252,32 +262,32 @@ export const AdminProductVariants: React.FC = () => {
           onClick={() => navigate('/admin/products')}
           className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center justify-center gap-2"
         >
-          ← Back to Products
+          ← Quay Lại Sản Phẩm
         </button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-600">
-          <p className="text-gray-600 text-sm font-medium">Total Variants</p>
+          <p className="text-gray-600 text-sm font-medium">Tổng Số Biến Thể</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{variants.length}</p>
-          <p className="text-xs text-gray-500 mt-1">variants defined</p>
+          <p className="text-xs text-gray-500 mt-1">biến thể đã xác định</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-600">
-          <p className="text-gray-600 text-sm font-medium">Total Stock</p>
+          <p className="text-gray-600 text-sm font-medium">Tổng Hàng Tồn</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{totalStock}</p>
-          <p className="text-xs text-gray-500 mt-1">units in inventory</p>
+          <p className="text-xs text-gray-500 mt-1">sản phẩm trong kho</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-600">
-          <p className="text-gray-600 text-sm font-medium">In Stock</p>
+          <p className="text-gray-600 text-sm font-medium">Có Sẵn Hàng</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{activeVariantsCount}</p>
-          <p className="text-xs text-gray-500 mt-1">variants available</p>
+          <p className="text-xs text-gray-500 mt-1">biến thể khả dụng</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-600">
-          <p className="text-gray-600 text-sm font-medium">Lowest Stock</p>
+          <p className="text-gray-600 text-sm font-medium">Hàng Tồn Ít Nhất</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{lowestStockVariant?.stockQuantity || 0}</p>
           <p className="text-xs text-gray-500 mt-1">
             {lowestStockVariant?.color} / {lowestStockVariant?.rom}
@@ -289,30 +299,30 @@ export const AdminProductVariants: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-col md:flex-row md:items-center gap-4 justify-between">
         <div className="flex flex-col md:flex-row gap-4 flex-1">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase">Sort By</label>
+            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase">Sắp Xếp Theo</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="color">Color</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="stock">Stock Level</option>
+              <option value="color">Màu Sắc</option>
+              <option value="price-low">Giá: Thấp đến Cao</option>
+              <option value="price-high">Giá: Cao đến Thấp</option>
+              <option value="stock">MỨc Hàng Tồn</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase">Filter</label>
+            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase">Lọc</label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Variants</option>
-              <option value="active">In Stock</option>
-              <option value="inactive">Out of Stock</option>
-              <option value="low-stock">Low Stock (&lt;20)</option>
+              <option value="all">Tất Cả Biến Thể</option>
+              <option value="active">Có Sẵn Hàng</option>
+              <option value="inactive">Hết Hàng</option>
+              <option value="low-stock">Hàng Tồn Ít (&lt;20)</option>
             </select>
           </div>
         </div>
@@ -322,7 +332,7 @@ export const AdminProductVariants: React.FC = () => {
           disabled={isLoading}
           className="px-4 py-2 bg-amber-700 text-white rounded-lg hover:bg-amber-800 font-medium flex items-center justify-center gap-2 whitespace-nowrap disabled:bg-gray-400"
         >
-          🆕 Add New Variant
+          🆕 Thêm Biến Thể Mới
         </button>
       </div>
 
@@ -330,7 +340,7 @@ export const AdminProductVariants: React.FC = () => {
       {isLoading && !variants.length && (
         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
           <div className="inline-block animate-spin">⏳</div>
-          <p className="mt-2 text-gray-600">Loading variants...</p>
+          <p className="mt-2 text-gray-600">Đang tải biến thể...</p>
         </div>
       )}
 
@@ -342,19 +352,19 @@ export const AdminProductVariants: React.FC = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Color
+                    Màu Sắc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Storage (ROM)
+                    Bộ Nhớ (ROM)
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Price
+                    Giá
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Stock
+                    Hàng Tồn
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
+                    HÀNH ĐỘNG
                   </th>
                 </tr>
               </thead>
@@ -387,14 +397,14 @@ export const AdminProductVariants: React.FC = () => {
                             onClick={() => handleEditVariant(variant)}
                             className="px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded"
                           >
-                            ✎ Edit
+                            ✎ Chỉnh Sửa
                           </button>
                           <button
-                            onClick={() => handleDeleteVariant(variant.id)}
+                            onClick={() => setDeleteConfirm({ id: variant.id, color: variant.color, rom: variant.rom })}
                             className="px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded"
                             disabled={isLoading}
                           >
-                            🗑️ Delete
+                            🗑️ Xóa
                           </button>
                         </div>
                       </td>
@@ -403,7 +413,7 @@ export const AdminProductVariants: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-gray-600">
-                      No variants found
+                      Không tìm thấy biến thể
                     </td>
                   </tr>
                 )}
@@ -414,7 +424,7 @@ export const AdminProductVariants: React.FC = () => {
           {/* Summary */}
           <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Showing {sortedVariants.length} of {variants.length} variants
+              Hiển thị {sortedVariants.length} của {variants.length} biến thể
             </p>
           </div>
         </div>
@@ -425,7 +435,7 @@ export const AdminProductVariants: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {editingVariant ? 'Edit Variant' : 'Add New Variant'}
+              {editingVariant ? 'Chỉnh Sửa Biến Thể' : 'Thêm Biến Thể Mới'}
             </h2>
 
             {formError && (
@@ -437,40 +447,40 @@ export const AdminProductVariants: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Color *
+                  Màu Sắc *
                 </label>
                 <input
                   type="text"
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Space Gray, Blue"
+                  placeholder="Ví dụ: Xám Không Gian, Xanh"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Storage (ROM) *
+                  Bộ Nhớ (ROM) *
                 </label>
                 <input
                   type="text"
                   value={formData.rom}
                   onChange={(e) => setFormData({ ...formData, rom: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 256GB, 512GB"
+                  placeholder="Ví dụ: 256GB, 512GB"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price (đ) *
+                  Price (đ)
                 </label>
                 <input
                   type="number"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 15000000"
+                  placeholder="Ví dụ: 15000000"
                   step="1000"
                   min="0"
                 />
@@ -478,14 +488,14 @@ export const AdminProductVariants: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock Quantity *
+                  Số Lượng Hàng Tồn
                 </label>
                 <input
                   type="number"
                   value={formData.stockQuantity}
                   onChange={(e) => setFormData({ ...formData, stockQuantity: parseInt(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., 100"
+                  placeholder="Ví dụ: 100"
                   step="1"
                   min="0"
                 />
@@ -493,7 +503,7 @@ export const AdminProductVariants: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Image
+                  Tải Lên Hình ảnh
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -511,7 +521,7 @@ export const AdminProductVariants: React.FC = () => {
                   {isUploadingImage && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg">
                       <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-xs text-blue-600">Uploading...</span>
+                      <span className="text-xs text-blue-600">Đang tải lên...</span>
                     </div>
                   )}
                 </div>
@@ -520,7 +530,7 @@ export const AdminProductVariants: React.FC = () => {
               {imagePreview && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image Preview
+                    Xem Trước Hình ảnh
                   </label>
                   <img
                     src={imagePreview}
@@ -537,15 +547,45 @@ export const AdminProductVariants: React.FC = () => {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
                 disabled={isSaving}
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={() => handleSaveVariant(formData)}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400"
                 disabled={isSaving || !formData.color || !formData.rom || formData.price < 0 || formData.stockQuantity < 0}
               >
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? 'Đang lưu...' : 'Lưu'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Xác nhận Xóa</h2>
+              <p className="text-gray-600 mb-6">
+                Bạn có chắc chắn muốn xóa biến thể <strong>{deleteConfirm.color} / {deleteConfirm.rom}</strong>? Hành động này không thể hoàn tác.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={isSaving}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={() => handleDeleteVariant(deleteConfirm.id)}
+                  disabled={isSaving}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition disabled:opacity-50"
+                >
+                  {isSaving ? 'Đang xóa...' : 'Xóa'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

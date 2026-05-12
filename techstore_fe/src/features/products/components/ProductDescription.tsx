@@ -19,7 +19,7 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     <div className="border-t border-gray-200">
       {/* Description Section */}
       <div className="p-6 md:p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Description</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Mô tả sản phẩm</h2>
 
         <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed">
           {description.split('\n\n').map((paragraph, index) => (

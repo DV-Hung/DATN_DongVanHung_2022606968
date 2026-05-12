@@ -4,7 +4,9 @@ import { apiClient } from '../../../services/api';
 export interface AdminSupplier {
   id: string | number;
   name: string;
-  contactDetails: string;
+  contactDetails?: string;
+  phone?: string;
+  address?: string;
   status: 'Active' | 'Inactive';
 }
 
@@ -28,6 +30,8 @@ const transformToAdminSupplier = (dto: SupplierDTO): AdminSupplier => {
   return {
     id: dto.id,
     name: dto.name,
+    phone: dto.phone || '',
+    address: dto.address || '',
     contactDetails: [dto.phone, dto.address, dto.email].filter(Boolean).join(', ') || '',
     status: dto.isActive ? 'Active' : 'Inactive',
   };
@@ -75,7 +79,8 @@ export const useAdminSuppliers = () => {
       try {
         const response = await apiClient.createSupplier({
           name: supplierData.name,
-          address: supplierData.contactDetails,
+          phone: supplierData.phone || '',
+          address: supplierData.address || '',
           isActive: supplierData.status === 'Active',
         });
 
@@ -99,7 +104,8 @@ export const useAdminSuppliers = () => {
       try {
         const response = await apiClient.updateSupplier(id, {
           name: supplierData.name,
-          address: supplierData.contactDetails,
+          phone: supplierData.phone || '',
+          address: supplierData.address || '',
           isActive: supplierData.status === 'Active',
         });
 

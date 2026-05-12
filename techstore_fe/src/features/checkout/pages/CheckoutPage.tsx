@@ -35,11 +35,89 @@ export const CheckoutPage: React.FC = () => {
     phone: '',
   });
 
+  const [errors, setErrors] = useState({
+    fullName: '',
+    email: '',
+    address: '',
+    phone: '',
+  });
+
+  const validateField = (field: string, value: string) => {
+    const newErrors = { ...errors };
+
+    switch (field) {
+      case 'fullName':
+        if (!value.trim()) {
+          newErrors.fullName = `${t('checkout.fullName')} không được để trống`;
+        } else {
+          newErrors.fullName = '';
+        }
+        break;
+
+      case 'email':
+        if (!value.trim()) {
+          newErrors.email = `${t('checkout.emailAddress')} không được để trống`;
+        } else {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            newErrors.email = 'Email không đúng định dạng. Vui lòng nhập email hợp lệ (ví dụ: abc@gmail.com)';
+          } else {
+            newErrors.email = '';
+          }
+        }
+        break;
+
+      case 'address':
+        if (!value.trim()) {
+          newErrors.address = `${t('checkout.shippingAddress')} không được để trống`;
+        } else {
+          newErrors.address = '';
+        }
+        break;
+
+      case 'phone':
+        if (!value.trim()) {
+          newErrors.phone = `${t('checkout.phoneNumber')} không được để trống`;
+        } else {
+          const phoneRegex = /^[0-9]{10}$/;
+          if (!phoneRegex.test(value)) {
+            newErrors.phone = 'Số điện thoại phải là 10 chữ số và chỉ chứa các chữ số (không có chữ hoặc ký tự đặc biệt)';
+          } else {
+            newErrors.phone = '';
+          }
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    setErrors(newErrors);
+    return newErrors[field as keyof typeof newErrors] === '';
+  };
+
+  const validateAllFields = () => {
+    const allValid =
+      validateField('fullName', shippingInfo.fullName) &&
+      validateField('email', shippingInfo.email) &&
+      validateField('address', shippingInfo.address) &&
+      validateField('phone', shippingInfo.phone);
+
+    return allValid;
+  };
+
   const handleShippingChange = (field: string, value: string) => {
     setShippingInfo((prev) => ({
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (errors[field as keyof typeof errors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
   const breadcrumbs = [
@@ -73,41 +151,16 @@ export const CheckoutPage: React.FC = () => {
   const isEmpty = checkoutItems.length === 0;
 
   const handlePlaceOrder = async () => {
-    // Validate shipping info
-    if (!shippingInfo.fullName.trim()) {
-      alert(t('checkout.fullName') + ' is required');
-      return;
-    }
-    if (!shippingInfo.email.trim()) {
-      alert(t('checkout.emailAddress') + ' is required');
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(shippingInfo.email)) {
-      alert('Email không đúng định dạng. Vui lòng nhập email hợp lệ (ví dụ: user@example.com)');
-      return;
-    }
-
-    if (!shippingInfo.address.trim()) {
-      alert(t('checkout.shippingAddress') + ' is required');
-      return;
-    }
-    if (!shippingInfo.phone.trim()) {
-      alert(t('checkout.phoneNumber') + ' is required');
-      return;
-    }
-
-    // Validate phone number - must be 10 digits, numbers only
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(shippingInfo.phone)) {
-      alert('Số điện thoại phải là 10 chữ số và chỉ chứa các chữ số (không có chữ hoặc ký tự đặc biệt)');
+    // Validate all fields
+    if (!validateAllFields()) {
       return;
     }
 
     if (checkoutItems.length === 0) {
-      alert(t('checkout.cartEmpty'));
+      setErrors((prev) => ({
+        ...prev,
+        fullName: t('checkout.cartEmpty'),
+      }));
       return;
     }
 
@@ -133,7 +186,7 @@ export const CheckoutPage: React.FC = () => {
         email: shippingInfo.email,
         shippingAddress: shippingInfo.address,
         phone: shippingInfo.phone,
-        paymentMethod: 'BANK_TRANSFER', // Default payment method
+        paymentMethod: 'COD', // Default payment method
         totalAmount: totalAmount,
         orderItems: orderItems,
       };
@@ -285,38 +338,133 @@ export const CheckoutPage: React.FC = () => {
                     <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
                     <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
                   </svg>
-                  Shipping Information
+                  Thông tin giao hàng
                 </h2>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder={t('checkout.fullName')}
-                    value={shippingInfo.fullName}
-                    onChange={(e) => handleShippingChange('fullName', e.target.value)}
-                    className="col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                  <input
-                    type="email"
-                    placeholder={t('checkout.emailAddress')}
-                    value={shippingInfo.email}
-                    onChange={(e) => handleShippingChange('email', e.target.value)}
-                    className="col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder={t('checkout.shippingAddress')}
-                    value={shippingInfo.address}
-                    onChange={(e) => handleShippingChange('address', e.target.value)}
-                    className="col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                  <input
-                    type="tel"
-                    placeholder={t('checkout.phoneNumber')}
-                    value={shippingInfo.phone}
-                    onChange={(e) => handleShippingChange('phone', e.target.value)}
-                    className="col-span-2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  {/* Full Name */}
+                  <div className="col-span-2">
+                    <input
+                      type="text"
+                      placeholder={t('checkout.fullName')}
+                      value={shippingInfo.fullName}
+                      onChange={(e) => handleShippingChange('fullName', e.target.value)}
+                      onBlur={() => validateField('fullName', shippingInfo.fullName)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.fullName
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-orange-500'
+                        }`}
+                    />
+                    {errors.fullName && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {errors.fullName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="col-span-2">
+                    <input
+                      type="email"
+                      placeholder={t('checkout.emailAddress')}
+                      value={shippingInfo.email}
+                      onChange={(e) => handleShippingChange('email', e.target.value)}
+                      onBlur={() => validateField('email', shippingInfo.email)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.email
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-orange-500'
+                        }`}
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Address */}
+                  <div className="col-span-2">
+                    <input
+                      type="text"
+                      placeholder={t('checkout.shippingAddress')}
+                      value={shippingInfo.address}
+                      onChange={(e) => handleShippingChange('address', e.target.value)}
+                      onBlur={() => validateField('address', shippingInfo.address)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.address
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-orange-500'
+                        }`}
+                    />
+                    {errors.address && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {errors.address}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="col-span-2">
+                    <input
+                      type="tel"
+                      placeholder={t('checkout.phoneNumber')}
+                      value={shippingInfo.phone}
+                      onChange={(e) => handleShippingChange('phone', e.target.value)}
+                      onBlur={() => validateField('phone', shippingInfo.phone)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${errors.phone
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-orange-500'
+                        }`}
+                    />
+                    {errors.phone && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {errors.phone}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

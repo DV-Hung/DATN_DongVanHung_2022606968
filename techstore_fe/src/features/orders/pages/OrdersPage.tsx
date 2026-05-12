@@ -37,7 +37,7 @@ export const OrdersPage: React.FC = () => {
     try {
       setIsLoading(true);
       const response = await orderService.getUserOrders(user.id, currentPage, pageSize);
-      
+
       let filteredOrders = response.content;
       if (selectedStatus !== 'ALL') {
         filteredOrders = response.content.filter(
@@ -65,9 +65,9 @@ export const OrdersPage: React.FC = () => {
     try {
       setIsCancelling(true);
       await orderService.cancelOrder(orderId);
-      
+
       setToast({
-        message: t('orders.cancelSuccess') || 'Hủy đơn hàng thành công',
+        message: 'Hủy đơn hàng thành công',
         type: 'success',
       });
 
@@ -77,7 +77,6 @@ export const OrdersPage: React.FC = () => {
       console.error('Error cancelling order:', error);
       const errorMessage =
         error?.response?.data?.message ||
-        t('orders.cancelError') ||
         'Lỗi khi hủy đơn hàng';
       setToast({
         message: errorMessage,
@@ -95,10 +94,10 @@ export const OrdersPage: React.FC = () => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {t('orders.requireLogin') || 'Vui lòng đăng nhập'}
+              {'Vui lòng đăng nhập'}
             </h2>
             <p className="text-gray-600">
-              {t('orders.requireLoginDesc') || 'Bạn cần đăng nhập để xem danh sách đơn hàng'}
+              {'Bạn cần đăng nhập để xem danh sách đơn hàng'}
             </p>
           </div>
         </div>
@@ -108,11 +107,11 @@ export const OrdersPage: React.FC = () => {
   }
 
   const statusOptions = [
-    { value: 'ALL', label: t('order.filter.all') || 'Tất cả' },
-    { value: 'PENDING', label: t('order.status.pending') || 'Chờ xác nhận' },
-    { value: 'CONFIRMED', label: t('order.status.confirmed') || 'Đã xác nhận' },
-    { value: 'COMPLETED', label: t('order.status.completed') || 'Hoàn thành' },
-    { value: 'CANCELLED', label: t('order.status.cancelled') || 'Đã hủy' },
+    { value: 'ALL', label: 'Tất cả' },
+    { value: 'PENDING', label: 'Chờ xác nhận' },
+    { value: 'CONFIRMED', label: 'Đã xác nhận' },
+    { value: 'COMPLETED', label: 'Hoàn thành' },
+    { value: 'CANCELLED', label: 'Đã hủy' },
   ];
 
   return (
@@ -123,8 +122,8 @@ export const OrdersPage: React.FC = () => {
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <Breadcrumb items={[
-            { label: t('home.title') || 'Trang chủ', path: '/' },
-            { label: t('orders.myOrders') || 'Đơn hàng của tôi' },
+            { label: 'Trang chủ', path: '/' },
+            { label: 'Đơn hàng của tôi', path: '/orders' },
           ]} />
         </div>
       </div>
@@ -134,14 +133,14 @@ export const OrdersPage: React.FC = () => {
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('orders.myOrders') || 'Đơn hàng của tôi'}
+            {'Đơn hàng của tôi'}
           </h1>
           <p className="text-gray-600">
-            {t('orders.totalOrders') || 'Tổng cộng'}:
+            {'Tổng cộng'}:
             {' '}
             <span className="font-semibold text-gray-900">{totalElements}</span>
             {' '}
-            {t('orders.orderUnit') || 'đơn hàng'}
+            {'đơn hàng'}
           </p>
         </div>
 
@@ -154,11 +153,10 @@ export const OrdersPage: React.FC = () => {
                 setSelectedStatus(option.value);
                 setCurrentPage(0);
               }}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                selectedStatus === option.value
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition ${selectedStatus === option.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                }`}
             >
               {option.label}
             </button>
@@ -179,7 +177,7 @@ export const OrdersPage: React.FC = () => {
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">{t('orders.loading') || 'Đang tải...'}</p>
+              <p className="text-gray-600">{'Đang tải...'}</p>
             </div>
           </div>
         ) : orders.length === 0 ? (
@@ -199,16 +197,16 @@ export const OrdersPage: React.FC = () => {
                 />
               </svg>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {t('orders.noOrders') || 'Chưa có đơn hàng'}
+                {'Chưa có đơn hàng'}
               </h3>
               <p className="text-gray-600 mb-6">
-                {t('orders.noOrdersDesc') || 'Bạn chưa có đơn hàng nào. Hãy mua sắm ngay!'}
+                {'Bạn chưa có đơn hàng nào. Hãy mua sắm ngay!'}
               </p>
               <a
                 href="/"
                 className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
               >
-                {t('orders.continueShopping') || 'Tiếp tục mua sắm'}
+                {'Tiếp tục mua sắm'}
               </a>
             </div>
           </div>
@@ -232,18 +230,17 @@ export const OrdersPage: React.FC = () => {
                   disabled={currentPage === 0}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('common.previous') || 'Trước'}
+                  {'Trước'}
                 </button>
 
                 {Array.from({ length: totalPages }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentPage(index)}
-                    className={`px-3 py-2 rounded-lg transition ${
-                      currentPage === index
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
+                    className={`px-3 py-2 rounded-lg transition ${currentPage === index
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
                   >
                     {index + 1}
                   </button>
@@ -254,7 +251,7 @@ export const OrdersPage: React.FC = () => {
                   disabled={currentPage === totalPages - 1}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('common.next') || 'Tiếp'}
+                  {'Tiếp'}
                 </button>
               </div>
             )}

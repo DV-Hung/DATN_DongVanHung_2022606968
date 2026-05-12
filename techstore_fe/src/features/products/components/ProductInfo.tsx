@@ -19,20 +19,23 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, error } = useCart();
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
     product.variants && product.variants.length > 0 ? product.variants[0] : null
   );
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedStorage, setSelectedStorage] = useState<string | null>(null);
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
+  const [addToCartError, setAddToCartError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Extract unique colors and storage options from variants
   const colors = Array.from(
-    new Set(product.variants?.map(v => v.color).filter(Boolean) || [])
+    new Set(product.variants?.map(v => v.color).filter((c): c is string => Boolean(c)) || [])
   );
   const storageOptions = Array.from(
-    new Set(product.variants?.map(v => v.storage).filter(Boolean) || [])
+    new Set(product.variants?.map(v => v.storage).filter((s): s is string => Boolean(s)) || [])
   );
 
   // Initialize selected variant
@@ -47,13 +50,6 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       }
     }
   }, [product.id, product.variants]);
-
-  // Find variant based on selected color and storage
-  const findVariant = (color?: string, storage?: string): Variant | null => {
-    return product.variants?.find(v =>
-      (!color || v.color === color) && (!storage || v.storage === storage)
-    ) || null;
-  };
 
   // Handle color selection
   const handleColorSelect = (color: string) => {
@@ -85,12 +81,33 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
 
   const displayPrice = selectedVariant?.retailPrice || product.price;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedVariant) {
-      alert('Please select a variant (color and storage) before adding to cart');
+      setAddToCartError(t('products.pleaseSelectVariant') || 'Please select a variant (color and storage) before adding to cart');
       return;
     }
-    addToCart(product, quantity, selectedVariant);
+
+    setAddToCartLoading(true);
+    setAddToCartError(null);
+    setSuccessMessage(null);
+
+    try {
+      await addToCart(product, quantity, selectedVariant);
+      setSuccessMessage(t('Đã thêm vào giỏ') || 'Product added to cart successfully!');
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    } catch (err) {
+      setAddToCartError(
+        (err as any)?.response?.data?.message ||
+        t('products.errorAddingToCart') ||
+        'Failed to add product to cart. Please try again.'
+      );
+    } finally {
+      setAddToCartLoading(false);
+    }
   };
 
   const handleBuyNow = () => {
@@ -123,7 +140,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{product.name}</h1>
         {product.brand && (
           <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide">
-            {product.brand} {t('products.eliteSeries')}
+            {product.brand}
           </p>
         )}
       </div>
@@ -241,29 +258,63 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={handleBuyNow}
-          disabled={selectedVariant === null}
-          className="flex-1 bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
-        >
-          {t('products.purchaseNow')}
-        </button>
-        <button
-          onClick={handleAddToCart}
-          disabled={selectedVariant === null}
-          className="flex-1 bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-200"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          {t('products.addToCart')}
-        </button>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-3">
+          <button
+            onClick={handleBuyNow}
+            disabled={selectedVariant === null || !product.inStock}
+            className="flex-1 bg-gray-900 text-white font-semibold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
+          >
+            {t('products.purchaseNow')}
+          </button>
+          <button
+            onClick={handleAddToCart}
+            disabled={selectedVariant === null || !product.inStock || addToCartLoading}
+            className="flex-1 bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-200"
+          >
+            {addToCartLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                {t('products.adding') || 'Adding...'}
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                {t('Đã thêm vào giỏ')}
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Error Message */}
+        {(addToCartError || error) && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm flex items-start gap-3">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 5.917A2.972 2.972 0 00 15.027 2H4.973A2.972 2.972 0 002 5.917v8.166A2.972 2.972 0 004.973 17h10.054A2.972 2.972 0 0018 14.083V5.917zM9 13a1 1 0 11-2 0 1 1 0 012 0zm0-5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="font-semibold">Error</p>
+              <p>{addToCartError || error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-700 text-sm flex items-start gap-3">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <p>{successMessage}</p>
+          </div>
+        )}
       </div>
 
       {/* Shipping Info */}
@@ -273,8 +324,8 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
           <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
         </svg>
         <div className="text-sm">
-          <p className="font-semibold text-gray-900">Free Express Delivery</p>
-          <p className="text-gray-600">Ships in 24 hours. Expected arrival Dec 12-14.</p>
+          <p className="font-semibold text-gray-900">Miễn phí vận chuyển</p>
+          <p className="text-gray-600">Giao hàng trong 24-48 giờ</p>
         </div>
       </div>
 
@@ -282,7 +333,7 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       <div className="flex items-center gap-2">
         <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
         <span className={`font-medium ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-          {product.inStock ? 'In Stock' : 'Out of Stock'}
+          {product.inStock ? 'Còn hàng' : 'Hết hàng'}
         </span>
       </div>
     </div>

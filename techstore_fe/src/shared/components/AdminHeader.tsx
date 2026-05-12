@@ -29,13 +29,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
       {/* Right Section */}
       <div className="flex items-center gap-6">
         {/* Search */}
-        <div className="hidden md:flex">
-          <input
-            type="text"
-            placeholder={t('header.adminSearch')}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+
 
         {/* Notifications */}
         <button className="relative p-2 hover:bg-gray-100 rounded-lg">
@@ -48,10 +42,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         {/* User Profile */}
         <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
           <div className="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">AR</span>
+            <span className="text-white font-semibold text-sm">AD</span>
           </div>
           <div className="hidden md:block">
-            <p className="text-sm font-medium text-gray-900">{t('header.sampleName')}</p>
+            <p className="text-sm font-medium text-gray-900">{"ADMIN"}</p>
             <p className="text-xs text-gray-500">{t('header.sampleRole')}</p>
           </div>
         </div>

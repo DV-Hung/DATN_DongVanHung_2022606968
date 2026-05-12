@@ -27,7 +27,7 @@ export const CartPage: React.FC = () => {
     };
 
     const handleContinueShopping = () => {
-        navigate('/products');
+        navigate('/');
     };
 
     return (
@@ -106,7 +106,7 @@ export const CartPage: React.FC = () => {
                                             {/* Quantity & Remove */}
                                             <div className="flex flex-col items-end gap-3">
                                                 <button
-                                                    onClick={() => removeFromCart(item.id, item.variantId)}
+                                                    onClick={() => removeFromCart(item.id, item.variantId, item.cartItemId)}
                                                     className="text-gray-400 hover:text-red-500 transition"
                                                 >
                                                     <svg
@@ -123,14 +123,14 @@ export const CartPage: React.FC = () => {
                                                 </button>
                                                 <div className="flex items-center gap-2 border border-gray-300 rounded">
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId)}
+                                                        onClick={() => updateQuantity(item.id, item.quantity - 1, item.variantId, item.cartItemId)}
                                                         className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
                                                     >
                                                         −
                                                     </button>
                                                     <span className="w-8 text-center font-medium">{item.quantity}</span>
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId)}
+                                                        onClick={() => updateQuantity(item.id, item.quantity + 1, item.variantId, item.cartItemId)}
                                                         className="w-8 h-8 flex items-center justify-center hover:bg-gray-100"
                                                     >
                                                         +

@@ -156,15 +156,15 @@ export const AdminInventoryInflow: React.FC = () => {
 
   const handleAddItem = () => {
     if (!currentItem.variantId) {
-      setFormError('Please select a variant');
+      setFormError('Vui lòng chọn một biến thể');
       return;
     }
     if (currentItem.quantity <= 0) {
-      setFormError('Quantity must be greater than 0');
+      setFormError('Số lượng phải lớn hơn 0');
       return;
     }
     if (currentItem.importPrice <= 0) {
-      setFormError('Import price must be greater than 0');
+      setFormError('Giá nhập phải lớn hơn 0');
       return;
     }
 
@@ -204,15 +204,15 @@ export const AdminInventoryInflow: React.FC = () => {
   const validateForm = (): boolean => {
     setFormError(null);
     if (!formData.supplierId) {
-      setFormError('Supplier is required');
+      setFormError('Nhà cung cấp là bắt buộc');
       return false;
     }
     if (!formData.importDate) {
-      setFormError('Import date is required');
+      setFormError('Ngày nhập là bắt buộc');
       return false;
     }
     if (formData.items.length === 0) {
-      setFormError('At least one variant must be added');
+      setFormError('Phải thêm ít nhất một biến thể');
       return false;
     }
     return true;
@@ -237,7 +237,7 @@ export const AdminInventoryInflow: React.FC = () => {
       handleCloseModal();
       navigate('/admin/inventory-inflow');
     } catch (err: any) {
-      setFormError(err.message || 'Failed to create import order');
+      setFormError(err.message || 'Không thể tạo đơn hàng nhập');
     } finally {
       setIsSaving(false);
     }
@@ -258,7 +258,7 @@ export const AdminInventoryInflow: React.FC = () => {
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <span className="text-red-600">⚠️</span>
           <div>
-            <p className="font-medium text-red-900">Error</p>
+            <p className="font-medium text-red-900">Lỗi</p>
             <p className="text-sm text-red-700">{error}</p>
           </div>
         </div>
@@ -267,15 +267,15 @@ export const AdminInventoryInflow: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Inventory Inflow</h1>
-          <p className="text-gray-600 mt-1">Manage incoming hardware shipments and procurement batches.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Nhập Kho</h1>
+          <p className="text-gray-600 mt-1">Quản lý đơn nhập hàng.</p>
         </div>
         <button
           onClick={handleOpenModal}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
           disabled={isLoading}
         >
-          📥 Import Stock
+          📄 Nhập Kho
         </button>
       </div>
 
@@ -283,7 +283,7 @@ export const AdminInventoryInflow: React.FC = () => {
       {isLoading && !batches.length && (
         <div className="bg-white rounded-lg shadow-sm p-8 text-center">
           <div className="inline-block animate-spin">⏳</div>
-          <p className="mt-2 text-gray-600">Loading import orders...</p>
+          <p className="mt-2 text-gray-600">Đang tải đơn nhập...</p>
         </div>
       )}
 
@@ -295,22 +295,22 @@ export const AdminInventoryInflow: React.FC = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    IMPORT ID
+                    MÃ NHẬP
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    IMPORT DATE
+                    NGÀY NHẬP
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    SUPPLIER
+                    NHÀ CUNG CẤP
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    ITEMS COUNT
+                    SỐ LượNG HÀNG
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    TOTAL COST
+                    TỔNG CHI PHÍ
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    ACTIONS
+                    HÀNH ĐỘNG
                   </th>
                 </tr>
               </thead>
@@ -322,10 +322,10 @@ export const AdminInventoryInflow: React.FC = () => {
                         <p className="font-semibold text-gray-900">{batch.id}</p>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(batch.importDate).toLocaleDateString('en-US', {
+                        {new Date(batch.importDate).toLocaleDateString('vi-VN', {
                           year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
                         })}
                       </td>
                       <td className="px-6 py-4">
@@ -342,7 +342,7 @@ export const AdminInventoryInflow: React.FC = () => {
                           onClick={() => handleOpenDetailModal(batch)}
                           className="px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded"
                         >
-                          👁️ View Details
+                          👁 Xem Chi Tiết
                         </button>
                       </td>
                     </tr>
@@ -350,7 +350,7 @@ export const AdminInventoryInflow: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-6 py-8 text-center text-gray-600">
-                      No import orders found
+                      Không tìm thấy đơn nhập
                     </td>
                   </tr>
                 )}
@@ -361,7 +361,7 @@ export const AdminInventoryInflow: React.FC = () => {
           {/* Summary */}
           <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Showing {batches.length} import orders
+              Hiển thị {batches.length} đơn nhập
             </p>
           </div>
         </div>
@@ -371,7 +371,7 @@ export const AdminInventoryInflow: React.FC = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Import Order</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Tạo Đơn Nhập</h2>
 
             {formError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
@@ -383,7 +383,7 @@ export const AdminInventoryInflow: React.FC = () => {
               {/* Supplier Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Supplier *
+                  Nhà Cung Cấp *
                 </label>
                 <select
                   value={formData.supplierId || ''}
@@ -396,7 +396,7 @@ export const AdminInventoryInflow: React.FC = () => {
                   disabled={loadingSuppliers}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">{loadingSuppliers ? 'Loading...' : 'Select supplier'}</option>
+                  <option value="">{loadingSuppliers ? 'Đang tải...' : 'Chọn nhà cung cấp'}</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
                       {supplier.name}
@@ -408,7 +408,7 @@ export const AdminInventoryInflow: React.FC = () => {
               {/* Import Date */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Import Date *
+                  Ngày Nhập *
                 </label>
                 <input
                   type="date"
@@ -420,11 +420,11 @@ export const AdminInventoryInflow: React.FC = () => {
 
               {/* Add Variant Section */}
               <div className="border-t pt-4 mt-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Add Product Variants</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Thêm Biến Thể Sản Phẩm</h3>
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product
+                      Sản Phẩm
                     </label>
                     <select
                       value={selectedProductId || ''}
@@ -435,7 +435,7 @@ export const AdminInventoryInflow: React.FC = () => {
                       disabled={loadingProducts}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">{loadingProducts ? 'Loading...' : 'Select product'}</option>
+                      <option value="">{loadingProducts ? 'Đang tải...' : 'Chọn sản phẩm'}</option>
                       {products.map((product) => (
                         <option key={product.id} value={product.id}>
                           {product.name}
@@ -446,7 +446,7 @@ export const AdminInventoryInflow: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Variant
+                      Biến Thể
                     </label>
                     <select
                       value={currentItem.variantId || ''}
@@ -458,7 +458,7 @@ export const AdminInventoryInflow: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">
-                        {!selectedProductId ? 'Select product first' : loadingVariants ? 'Loading...' : 'Select variant'}
+                        {!selectedProductId ? 'Chọn sản phẩm trước' : loadingVariants ? 'Đang tải...' : 'Chọn biến thể'}
                       </option>
                       {variants.map((variant) => (
                         <option key={variant.id} value={variant.id}>
@@ -471,7 +471,7 @@ export const AdminInventoryInflow: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity
+                        Số Lượng
                       </label>
                       <input
                         type="number"
@@ -484,7 +484,7 @@ export const AdminInventoryInflow: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Import Price (đ)
+                        Giá Nhập (đ)
                       </label>
                       <input
                         type="number"
@@ -502,7 +502,7 @@ export const AdminInventoryInflow: React.FC = () => {
                     onClick={handleAddItem}
                     className="w-full px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg font-medium text-sm"
                   >
-                    + Add Variant
+                    + Thêm Biến Thể
                   </button>
                 </div>
               </div>
@@ -510,7 +510,7 @@ export const AdminInventoryInflow: React.FC = () => {
               {/* Items List */}
               {formData.items.length > 0 && (
                 <div className="border-t pt-4 mt-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Items in Order</h3>
+                  <h3 className="font-semibold text-gray-900 mb-3">Các Mục Hàng Trong Đơn Hàng</h3>
                   <div className="space-y-2">
                     {formData.items.map((item, index) => (
                       <div
@@ -520,7 +520,7 @@ export const AdminInventoryInflow: React.FC = () => {
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{item.productName}</p>
                           <p className="text-sm text-gray-600">
-                            {item.color} - {item.rom}
+                            Màu: {item.color} | Bộ Nhừ: {item.rom}
                           </p>
                           <p className="text-sm text-gray-600">
                             {item.quantity} × {Math.round(item.importPrice).toLocaleString('vi-VN')}đ = {Math.round(
@@ -539,10 +539,10 @@ export const AdminInventoryInflow: React.FC = () => {
                   </div>
                   <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-gray-600">
-                      Total Items: <span className="font-semibold text-gray-900">{formData.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                      Tổng Mục: <span className="font-semibold text-gray-900">{formData.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
                     </p>
                     <p className="text-sm text-gray-600">
-                      Total Cost: <span className="font-semibold text-gray-900">{Math.round(formData.totalCost).toLocaleString('vi-VN')}đ</span>
+                      Tổng Chi Phí: <span className="font-semibold text-gray-900">{Math.round(formData.totalCost).toLocaleString('vi-VN')}đ</span>
                     </p>
                   </div>
                 </div>
@@ -555,14 +555,14 @@ export const AdminInventoryInflow: React.FC = () => {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
                 disabled={isSaving}
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={handleSaveBatch}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400"
                 disabled={isSaving}
               >
-                {isSaving ? 'Creating...' : 'Create Order'}
+                {isSaving ? 'Đang Tạo...' : 'Tạo Đơn Hàng'}
               </button>
             </div>
           </div>
@@ -573,48 +573,48 @@ export const AdminInventoryInflow: React.FC = () => {
       {showDetailModal && selectedBatch && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Import Order Details</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Chi Tiết Đơn Nhập</h2>
 
             <div className="space-y-4">
               {/* Header Info */}
               <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="text-sm text-gray-600">Order ID</p>
+                  <p className="text-sm text-gray-600">Mã Đơn Hàng</p>
                   <p className="font-semibold text-gray-900">{selectedBatch.id}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Supplier</p>
+                  <p className="text-sm text-gray-600">Nhà Cung Cấp</p>
                   <p className="font-semibold text-gray-900">{selectedBatch.supplierName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Import Date</p>
+                  <p className="text-sm text-gray-600">Ngày Nhập</p>
                   <p className="font-semibold text-gray-900">
-                    {new Date(selectedBatch.importDate).toLocaleDateString('en-US', {
+                    {new Date(selectedBatch.importDate).toLocaleDateString('vi-VN', {
                       year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
                     })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Cost</p>
+                  <p className="text-sm text-gray-600">Tổng Chi Phí</p>
                   <p className="font-semibold text-gray-900">{Math.round(selectedBatch.totalCost).toLocaleString('vi-VN')}đ</p>
                 </div>
               </div>
 
               {/* Items */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Imported Variants</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Các Biến Thể Được Nhập</h3>
                 <div className="space-y-2">
                   {selectedBatch.items.map((item, index) => (
                     <div key={index} className="p-3 border border-gray-200 rounded-lg">
                       <p className="font-medium text-gray-900">{item.productName}</p>
-                      <p className="text-sm text-gray-600">Color: {item.color} | Storage: {item.rom}</p>
+                      <p className="text-sm text-gray-600">Màu: {item.color} | Bộ Nhớ: {item.rom}</p>
                       <p className="text-sm text-gray-600">
-                        Quantity: {item.quantity} | Unit Price: {Math.round(item.importPrice).toLocaleString('vi-VN')}đ
+                        Số Lượng: {item.quantity} | Giá Đơn Vị: {Math.round(item.importPrice).toLocaleString('vi-VN')}đ
                       </p>
                       <p className="text-sm font-semibold text-gray-900">
-                        Subtotal: {Math.round(item.quantity * item.importPrice).toLocaleString('vi-VN')}đ
+                        Tổng Tiền: {Math.round(item.quantity * item.importPrice).toLocaleString('vi-VN')}đ
                       </p>
                     </div>
                   ))}
@@ -627,7 +627,7 @@ export const AdminInventoryInflow: React.FC = () => {
                 onClick={handleCloseDetailModal}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
               >
-                Close
+                Đóng
               </button>
             </div>
           </div>

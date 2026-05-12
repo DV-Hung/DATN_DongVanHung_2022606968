@@ -121,7 +121,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ product: initia
             <div className="inline-block">
               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>
-            <p className="mt-4 text-gray-600">Loading product details...</p>
+            <p className="mt-4 text-gray-600">Đang tải chi tiết sản phẩm...</p>
           </div>
         </div>
         <Footer />
@@ -135,10 +135,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ product: initia
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Not Found</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Không tìm thấy sản phẩm</h1>
             <p className="text-gray-600 mb-6">{error || 'The product you are looking for does not exist.'}</p>
             <a href="/" className="inline-block px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              Back to Home
+              Trở về
             </a>
           </div>
         </div>
