@@ -71,4 +71,19 @@ public interface OrderService {
      * Xóa đơn hàng
      */
     void deleteOrder(Long orderId);
+
+    /**
+     * Lấy tổng doanh số theo năm
+     */
+    Double getTotalSalesByYear(int year);
+
+    /**
+     * Lấy tổng số đơn hàng theo năm
+     */
+    Long getTotalOrdersByYear(int year);
+
+    /**
+     * Lấy danh sách năm có dữ liệu đơn hàng
+     */
+    List<Integer> getAvailableYears();
 }

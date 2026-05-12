@@ -1,10 +1,13 @@
 package com.haui.techstore.service.impl;
 
 import com.haui.techstore.dto.SupplierDTO;
+import com.haui.techstore.entity.ImportOrder;
+import com.haui.techstore.entity.ProductVariant;
 import com.haui.techstore.entity.Supplier;
 import com.haui.techstore.exception.BadRequestException;
 import com.haui.techstore.exception.ResourceNotFoundException;
 import com.haui.techstore.mapper.SupplierMapper;
+import com.haui.techstore.repository.ImportOrderRepository;
 import com.haui.techstore.repository.SupplierRepository;
 import com.haui.techstore.service.SupplierService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +24,7 @@ public class SupplierServiceImpl implements SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
+    private final ImportOrderRepository importOrderRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,8 +84,15 @@ public class SupplierServiceImpl implements SupplierService {
         Supplier supplier = supplierRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Supplier", "id", id));
 
+        // Get all import orders of the supplier
+        List<ImportOrder> importOrders = importOrderRepository.findBySupplierId(id);
+
+        // Check if any importOrder is used in orders
+        if (importOrders.size() > 0) {
+            throw new BadRequestException("Không thể xóa nhà cung cấp đã có đơn nhập");
+        }
         // Set supplier to inactive instead of deleting
-        supplier.setIsActive(false);
-        supplierRepository.save(supplier);
+
+        supplierRepository.delete(supplier);
     }
 }

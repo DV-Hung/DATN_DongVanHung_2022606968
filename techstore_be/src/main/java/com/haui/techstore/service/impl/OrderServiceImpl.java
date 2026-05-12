@@ -371,7 +371,7 @@ public class OrderServiceImpl implements OrderService {
                         "Từ trạng thái PENDING chỉ có thể chuyển sang CONFIRMED");
             }
         } else if ("CONFIRMED".equals(currentStatus)) {
-            if (!"COMPLETED".equals(newStatus)) {
+            if (!"COMPLETED".equals(newStatus) && !"CANCELLED".equals(newStatus)) {
                 throw new BadRequestException(
                         "Từ trạng thái CONFIRMED chỉ có thể chuyển sang COMPLETED");
             }
@@ -393,5 +393,25 @@ public class OrderServiceImpl implements OrderService {
 
         orderDTO.setOrderItems(orderItemDTOs);
         return orderDTO;
+    }
+
+    @Override
+    public Double getTotalSalesByYear(int year) {
+        List<Order> ordersInYear = orderRepository.findByYear(year);
+        return ordersInYear.stream()
+                .filter(order -> "COMPLETED".equals(order.getStatus()))
+                .mapToDouble(order -> order.getTotalAmount().doubleValue())
+                .sum();
+    }
+
+    @Override
+    public Long getTotalOrdersByYear(int year) {
+        List<Order> ordersInYear = orderRepository.findByYear(year);
+        return (long) ordersInYear.size();
+    }
+
+    @Override
+    public List<Integer> getAvailableYears() {
+        return orderRepository.findAvailableYears();
     }
 }

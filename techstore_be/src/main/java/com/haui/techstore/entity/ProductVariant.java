@@ -12,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "product_variants", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "product_id", "color" })
+        @UniqueConstraint(columnNames = { "product_id", "color", "rom" })
 })
 @Data
 @NoArgsConstructor

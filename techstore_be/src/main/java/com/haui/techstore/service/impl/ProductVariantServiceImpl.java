@@ -72,10 +72,12 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", dto.getProductId()));
 
-        // Check if variant with same color already exists for this product
-        if (variantRepository.findByProductIdAndColor(dto.getProductId(), dto.getColor()).isPresent()) {
+        // Check if variant with same color and rom already exists for this product
+        if (variantRepository.findByProductIdAndRomAndColor(dto.getProductId(), dto.getRom(), dto.getColor())
+                .isPresent()) {
             throw new BadRequestException(
-                    "Product variant with color '" + dto.getColor() + "' already exists for this product");
+                    "Product variant with ROM '" + dto.getRom() + "' and color '" + dto.getColor()
+                            + "' already exists for this product");
         }
 
         // Create variant entity
@@ -96,18 +98,27 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductVariant variant = variantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ProductVariant", "id", id));
 
-        // If color is being changed, check for uniqueness
-        if (dto.getColor() != null && !dto.getColor().equals(variant.getColor())) {
-            if (variantRepository.findByProductIdAndColor(variant.getProduct().getId(), dto.getColor()).isPresent()) {
+        // If color or rom is being changed, check for uniqueness
+        String newColor = dto.getColor() != null ? dto.getColor() : variant.getColor();
+        String newRom = dto.getRom() != null ? dto.getRom() : variant.getRom();
+
+        if ((dto.getColor() != null && !dto.getColor().equals(variant.getColor())) ||
+                (dto.getRom() != null && !dto.getRom().equals(variant.getRom()))) {
+            if (variantRepository.findByProductIdAndRomAndColor(variant.getProduct().getId(), newRom, newColor)
+                    .isPresent()) {
                 throw new BadRequestException(
-                        "Product variant with color '" + dto.getColor() + "' already exists for this product");
+                        "Product variant with ROM '" + newRom + "' and color '" + newColor
+                                + "' already exists for this product");
             }
-            variant.setColor(dto.getColor());
         }
 
         // Update fields
         if (dto.getRom() != null) {
             variant.setRom(dto.getRom());
+        }
+
+        if (dto.getColor() != null) {
+            variant.setColor(dto.getColor());
         }
 
         if (dto.getPrice() != null) {
@@ -159,19 +170,21 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         long orderCount = orderItemRepository.findByVariantId(id).size();
         if (orderCount > 0) {
             throw new BadRequestException(
-                    "Cannot delete variant. It is used in " + orderCount
-                            + " order(s). Please contact support for assistance.");
+                    "Không thể xóa phiên bản này. Có đơn hàng đang sử dụng phiên bản này. ");
         }
-
         // Check if variant is used in imports
         long importCount = importDetailRepository.findByVariantId(id).size();
         if (importCount > 0) {
             throw new BadRequestException(
-                    "Cannot delete variant. It is used in " + importCount
-                            + " import order(s). Please contact support for assistance.");
+                    "Không thể xóa phiên bản này. Có đơn nhập hàng đang sử dụng phiên bản này.");
         }
 
+        if (variant.getStockQuantity() > 0) {
+            throw new BadRequestException(
+                    "Không thể xóa phiên bản này. Vẫn còn tồn kho.");
+        }
         // If no references found, delete the variant
         variantRepository.delete(variant);
     }
+
 }

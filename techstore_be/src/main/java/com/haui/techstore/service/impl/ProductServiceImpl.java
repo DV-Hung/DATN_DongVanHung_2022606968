@@ -93,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductDTO> filterByCategoryWithOptions(Long categoryId, Double minPrice, Double maxPrice,
-            List<String> brandNames, Pageable pageable) {
+            List<String> brandNames, String name, String sortBy, Pageable pageable) {
         // Convert brand names to lowercase for case-insensitive comparison
         List<String> lowerCaseBrandNames = brandNames != null && !brandNames.isEmpty()
                 ? brandNames.stream().map(String::toLowerCase).collect(Collectors.toList())
@@ -101,10 +101,49 @@ public class ProductServiceImpl implements ProductService {
 
         // Build specification for dynamic query filtering
         Specification<Product> spec = ProductSpecification.combineFilters(
-                categoryId, minPrice, maxPrice, lowerCaseBrandNames);
+                categoryId, minPrice, maxPrice, lowerCaseBrandNames, name, sortBy);
 
-        return productRepository.findAll(spec, pageable)
-                .map(productMapper::toDTO);
+        // Fetch all products with filters (we'll handle sorting in memory)
+        List<Product> allProducts = productRepository.findAll(spec);
+
+        // Apply sorting if specified
+        if (sortBy != null && !sortBy.isEmpty()) {
+            allProducts.sort((p1, p2) -> {
+                // Get minimum price for each product from variants
+                Double price1 = p1.getVariants() != null && !p1.getVariants().isEmpty()
+                        ? p1.getVariants().stream()
+                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice().doubleValue() : 0.0)
+                                .min().orElse(0.0)
+                        : 0.0;
+
+                Double price2 = p2.getVariants() != null && !p2.getVariants().isEmpty()
+                        ? p2.getVariants().stream()
+                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice().doubleValue() : 0.0)
+                                .min().orElse(0.0)
+                        : 0.0;
+
+                switch (sortBy) {
+                    case "price-low":
+                        return Double.compare(price1, price2);
+                    case "price-high":
+                        return Double.compare(price2, price1);
+                    default:
+                        return 0;
+                }
+            });
+        }
+
+        // Convert to DTOs
+        List<ProductDTO> dtos = allProducts.stream()
+                .map(productMapper::toDTO)
+                .collect(Collectors.toList());
+
+        // Apply pagination manually
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), dtos.size());
+
+        List<ProductDTO> pageContent = dtos.subList(start, end);
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, dtos.size());
     }
 
     @Override
@@ -235,8 +274,7 @@ public class ProductServiceImpl implements ProductService {
             long orderCount = orderItemRepository.findByVariantId(variant.getId()).size();
             if (orderCount > 0) {
                 throw new BadRequestException(
-                        "Cannot delete product. It is used in " + orderCount
-                                + " order(s). Please contact support for assistance.");
+                        "Không thể xóa sản phẩm. Có đơn hàng đang sử dụng sản phẩm này.");
             }
         }
 
@@ -245,16 +283,28 @@ public class ProductServiceImpl implements ProductService {
             long importCount = importDetailRepository.findByVariantId(variant.getId()).size();
             if (importCount > 0) {
                 throw new BadRequestException(
-                        "Cannot delete product. It is used in " + importCount
-                                + " import order(s). Please contact support for assistance.");
+                        "Không thể xóa sản phẩm. Có đơn nhập hàng đang sử dụng sản phẩm này.");
             }
         }
 
+        for (ProductVariant variant : variants) {
+            long quantity = 0;
+            quantity += variant.getStockQuantity();
+            if (quantity > 0) {
+                throw new BadRequestException(
+                        "Không thể xóa sản phẩm. Vẫn còn sản phẩm trong kho.");
+            }
+        }
         // If no references found, delete all variants first and then the product
         if (!variants.isEmpty()) {
             productVariantRepository.deleteAll(variants);
         }
 
         productRepository.delete(product);
+    }
+
+    @Override
+    public Long getTotalProductsCount() {
+        return productRepository.count();
     }
 }

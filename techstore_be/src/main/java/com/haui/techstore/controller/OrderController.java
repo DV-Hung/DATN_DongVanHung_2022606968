@@ -3,6 +3,7 @@ package com.haui.techstore.controller;
 import com.haui.techstore.dto.ApiResponse;
 import com.haui.techstore.dto.OrderDTO;
 import com.haui.techstore.service.OrderService;
+import com.haui.techstore.service.SystemLogsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 public class OrderController {
 
         private final OrderService orderService;
+        private final SystemLogsService systemLogsService;
 
         @GetMapping
         @Operation(summary = "Get all orders", description = "Retrieve all orders with pagination (admin use)")
@@ -106,14 +109,14 @@ public class OrderController {
                                 new ApiResponse<>(200, "Lấy danh sách đơn hàng thành công", orders));
         }
 
-        @GetMapping("/search/phone")
+        @GetMapping("/search")
         @Operation(summary = "Search orders by phone number", description = "Retrieve orders by customer's phone number")
         public ResponseEntity<ApiResponse<Page<OrderDTO>>> searchOrdersByPhoneNumber(
-                        @RequestParam String phoneNumber,
+                        @RequestParam String phone,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
                 Pageable pageable = PageRequest.of(page, size);
-                Page<OrderDTO> orders = orderService.searchOrdersByPhoneNumber(phoneNumber, pageable);
+                Page<OrderDTO> orders = orderService.searchOrdersByPhoneNumber(phone, pageable);
                 return ResponseEntity.ok(
                                 new ApiResponse<>(200, "Tìm kiếm đơn hàng thành công", orders));
         }
@@ -132,8 +135,26 @@ public class OrderController {
 
         @PutMapping("/{id}/cancel")
         @Operation(summary = "Cancel order", description = "Cancel an order (only PENDING or CONFIRMED orders can be cancelled)")
-        public ResponseEntity<ApiResponse<OrderDTO>> cancelOrder(@PathVariable Long id) {
-                OrderDTO cancelledOrder = orderService.cancelOrder(id);
+        public ResponseEntity<ApiResponse<OrderDTO>> cancelOrder(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long currentUserId = extractUserIdFromAuth(authentication);
+
+                // Get order info before cancellation for logging
+                OrderDTO orderBefore = orderService.getOrderById(id);
+                String oldStatus = orderBefore.getStatus();
+
+                OrderDTO cancelledOrder = orderService.updateOrderStatus(id, "CANCELLED");
+
+                // Log the cancellation
+                systemLogsService.saveLog(
+                                currentUserId,
+                                "CANCEL_ORDER",
+                                "orders",
+                                id,
+                                oldStatus,
+                                "CANCELLED");
+
                 return ResponseEntity.ok(
                                 new ApiResponse<>(200, "Đơn hàng đã được hủy", cancelledOrder));
         }
@@ -144,5 +165,21 @@ public class OrderController {
                 orderService.deleteOrder(id);
                 return ResponseEntity.ok(
                                 new ApiResponse<>(200, "Đơn hàng đã được xóa", null));
+        }
+
+        private Long extractUserIdFromAuth(Authentication authentication) {
+                if (authentication != null && authentication.getPrincipal() != null) {
+                        try {
+                                Object principal = authentication.getPrincipal();
+                                if (principal instanceof Long) {
+                                        return (Long) principal;
+                                } else if (principal instanceof String) {
+                                        return Long.parseLong((String) principal);
+                                }
+                        } catch (NumberFormatException e) {
+                                // Log error if needed
+                        }
+                }
+                return null;
         }
 }

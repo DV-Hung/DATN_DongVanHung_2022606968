@@ -32,4 +32,9 @@ public interface UserService {
     void deleteByEmail(String email);
 
     void updateUserStatus(Long id, String status);
+
+    /**
+     * Get total count of users
+     */
+    Long getTotalUsersCount();
 }

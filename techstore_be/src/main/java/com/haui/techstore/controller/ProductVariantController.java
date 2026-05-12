@@ -4,14 +4,17 @@ import com.haui.techstore.dto.ApiResponse;
 import com.haui.techstore.dto.ProductVariantDTO;
 import com.haui.techstore.dto.ProductDTO;
 import com.haui.techstore.service.ProductVariantService;
+import com.haui.techstore.service.SystemLogsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -21,6 +24,7 @@ import java.util.List;
 public class ProductVariantController {
 
     private final ProductVariantService variantService;
+    private final SystemLogsService systemLogsService;
 
     @GetMapping("/{id}")
     @Operation(summary = "Get variant by ID", description = "Retrieve a product variant by its ID")
@@ -56,8 +60,28 @@ public class ProductVariantController {
 
     @PostMapping
     @Operation(summary = "Create a new variant", description = "Create a new product variant")
-    public ResponseEntity<ApiResponse<ProductVariantDTO>> create(@Valid @RequestBody ProductVariantDTO dto) {
+    public ResponseEntity<ApiResponse<ProductVariantDTO>> create(@Valid @RequestBody ProductVariantDTO dto,
+            Authentication authentication) {
         ProductVariantDTO created = variantService.create(dto);
+        Long currentUserId = extractUserIdFromAuth(authentication);
+        if (dto.getPrice().compareTo(BigDecimal.ZERO) != 0) {
+            systemLogsService.saveLog(
+                    currentUserId,
+                    "CREATE_VARIANT",
+                    "product_variants",
+                    created.getId(),
+                    null,
+                    "Variant created with price: " + dto.getPrice());
+        }
+        if (dto.getStockQuantity() != 0) {
+            systemLogsService.saveLog(
+                    currentUserId,
+                    "CREATE_VARIANT",
+                    "product_variants",
+                    created.getId(),
+                    null,
+                    "Variant created with stock quantity: " + dto.getStockQuantity());
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, "Variant created successfully", created));
     }
@@ -66,8 +90,35 @@ public class ProductVariantController {
     @Operation(summary = "Update a variant", description = "Update an existing product variant")
     public ResponseEntity<ApiResponse<ProductVariantDTO>> update(
             @PathVariable Long id,
-            @Valid @RequestBody ProductVariantDTO dto) {
+            @Valid @RequestBody ProductVariantDTO dto,
+            Authentication authentication) {
+        Long currentUserId = extractUserIdFromAuth(authentication);
+        ProductVariantDTO oldVariant = variantService.getById(id);
         ProductVariantDTO updated = variantService.update(id, dto);
+
+        // Log price changes - use compareTo() for BigDecimal comparison to avoid scale
+        // issues
+        if (oldVariant.getPrice() != null && dto.getPrice() != null &&
+                oldVariant.getPrice().compareTo(dto.getPrice()) != 0) {
+            String oldPriceStr = oldVariant.getPrice().stripTrailingZeros().toPlainString();
+            systemLogsService.saveLog(
+                    currentUserId,
+                    "UPDATE_PRICE",
+                    "product_variants",
+                    id,
+                    oldPriceStr,
+                    dto.getPrice().toString());
+        }
+        if (oldVariant.getStockQuantity() != null && dto.getStockQuantity() != null &&
+                oldVariant.getStockQuantity().compareTo(dto.getStockQuantity()) != 0) {
+            systemLogsService.saveLog(
+                    currentUserId,
+                    "UPDATE_STOCK",
+                    "product_variants",
+                    id,
+                    oldVariant.getStockQuantity().toString(),
+                    dto.getStockQuantity().toString());
+        }
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Variant updated successfully", updated));
     }
@@ -88,5 +139,21 @@ public class ProductVariantController {
         variantService.delete(id);
         return ResponseEntity.ok(
                 new ApiResponse<>(200, "Variant deleted successfully", null));
+    }
+
+    private Long extractUserIdFromAuth(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() != null) {
+            try {
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof Long) {
+                    return (Long) principal;
+                } else if (principal instanceof String) {
+                    return Long.parseLong((String) principal);
+                }
+            } catch (NumberFormatException e) {
+                // Log error if needed
+            }
+        }
+        return null;
     }
 }

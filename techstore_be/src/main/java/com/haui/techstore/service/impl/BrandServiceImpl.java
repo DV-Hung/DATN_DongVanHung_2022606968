@@ -82,8 +82,8 @@ public class BrandServiceImpl implements BrandService {
         long productCount = productRepository.countByBrandId(id);
         if (productCount > 0) {
             throw new BadRequestException(
-                    "Cannot delete brand. It is used in " + productCount
-                            + " product(s). Please delete those products first.");
+                    "Không thể xóa nhãn hàng này. Có " + productCount
+                            + " sản phẩm đang sử dụng nhãn hàng này.");
         }
 
         brandRepository.delete(brand);

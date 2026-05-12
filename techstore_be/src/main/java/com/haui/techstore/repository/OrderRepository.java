@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -26,6 +27,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                         @Param("endDate") LocalDateTime endDate,
                         Pageable pageable);
 
-        @Query("SELECT o FROM Order o WHERE o.phone LIKE %:phoneNumber%")
+        @Query("SELECT o FROM Order o WHERE o.phone = :phoneNumber")
         Page<Order> findByPhoneNumber(@Param("phoneNumber") String phoneNumber, Pageable pageable);
+
+        @Query("SELECT o FROM Order o WHERE YEAR(o.orderDate) = :year")
+        List<Order> findByYear(@Param("year") int year);
+
+        @Query("SELECT DISTINCT YEAR(o.orderDate) FROM Order o ORDER BY YEAR(o.orderDate) DESC")
+        List<Integer> findAvailableYears();
 }

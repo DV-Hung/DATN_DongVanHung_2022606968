@@ -88,10 +88,13 @@ public class ProductSpecification {
             Long categoryId,
             Double minPrice,
             Double maxPrice,
-            List<String> brandNames) {
+            List<String> brandNames,
+            String name,
+            String sortBy) {
         return Specification
                 .where(filterByCategory(categoryId))
                 .and(filterByPriceRange(minPrice, maxPrice))
-                .and(filterByBrandNames(brandNames));
+                .and(filterByBrandNames(brandNames))
+                .and(searchByName(name));
     }
 }

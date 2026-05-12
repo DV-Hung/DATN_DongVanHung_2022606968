@@ -3,6 +3,7 @@ package com.haui.techstore.controller;
 import com.haui.techstore.dto.ApiResponse;
 import com.haui.techstore.dto.UserDTO;
 import com.haui.techstore.service.UserService;
+import com.haui.techstore.service.SystemLogsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,8 +26,10 @@ import java.util.List;
 public class UserController {
 
         private final UserService userService;
+        private final SystemLogsService systemLogsService;
 
         @GetMapping
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Get all users", description = "Retrieve all users with pagination")
         public ResponseEntity<ApiResponse<Page<UserDTO>>> getAll(
                         @RequestParam(defaultValue = "0") int page,
@@ -36,6 +41,7 @@ public class UserController {
         }
 
         @GetMapping("/all")
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Get all users without pagination", description = "Retrieve all users as a list")
         public ResponseEntity<ApiResponse<List<UserDTO>>> getAllList() {
                 List<UserDTO> users = userService.getAll();
@@ -44,6 +50,7 @@ public class UserController {
         }
 
         @GetMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal")
         @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID")
         public ResponseEntity<ApiResponse<UserDTO>> getById(@PathVariable Long id) {
                 UserDTO user = userService.getById(id);
@@ -52,6 +59,7 @@ public class UserController {
         }
 
         @GetMapping("/search/email")
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Search users by email", description = "Search for users by email address")
         public ResponseEntity<ApiResponse<Page<UserDTO>>> searchByEmail(
                         @RequestParam String email,
@@ -64,6 +72,7 @@ public class UserController {
         }
 
         @GetMapping("/search/fullname")
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Search users by full name", description = "Search for users by full name")
         public ResponseEntity<ApiResponse<Page<UserDTO>>> searchByFullName(
                         @RequestParam String fullName,
@@ -76,6 +85,7 @@ public class UserController {
         }
 
         @PostMapping
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Create a new user", description = "Create a new user account")
         public ResponseEntity<ApiResponse<UserDTO>> create(@Valid @RequestBody UserDTO userDTO) {
                 UserDTO createdUser = userService.create(userDTO);
@@ -84,6 +94,7 @@ public class UserController {
         }
 
         @PutMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal")
         @Operation(summary = "Update user", description = "Update an existing user")
         public ResponseEntity<ApiResponse<UserDTO>> update(
                         @PathVariable Long id,
@@ -94,20 +105,53 @@ public class UserController {
         }
 
         @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
         @Operation(summary = "Deactivate user", description = "Deactivate a user by setting status to inactive")
-        public ResponseEntity<ApiResponse<String>> delete(@PathVariable Long id) {
-                userService.updateUserStatus(id, "inactive");
+        public ResponseEntity<ApiResponse<String>> delete(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+                Long currentUserId = extractUserIdFromAuth(authentication);
+
+                // Get user info before deactivation for logging
+                UserDTO user = userService.getById(id);
+                String oldStatus = user.getStatus();
+
+                // Deactivate user
+                userService.updateUserStatus(id, "INACTIVE");
+
+                // Log the action
+                systemLogsService.saveLog(
+                                currentUserId,
+                                "DEACTIVATE_USER",
+                                "users",
+                                id,
+                                oldStatus,
+                                "INACTIVE");
+
                 return ResponseEntity.ok(
                                 new ApiResponse<>(200, "User deactivated successfully",
                                                 "User with id " + id + " has been deactivated"));
         }
 
-        @DeleteMapping("/email/{email}")
-        @Operation(summary = "Delete user by email", description = "Delete a user by email address")
-        public ResponseEntity<ApiResponse<String>> deleteByEmail(@PathVariable String email) {
-                userService.deleteByEmail(email);
-                return ResponseEntity.ok(
-                                new ApiResponse<>(200, "User deleted successfully",
-                                                "User with email " + email + " has been deleted"));
+        /**
+         * Trích xuất userId từ JWT Authentication token
+         * 
+         * @param authentication Authentication object chứa thông tin từ JWT token
+         * @return userId được lấy từ token, hoặc null nếu không tìm thấy
+         */
+        private Long extractUserIdFromAuth(Authentication authentication) {
+                if (authentication != null && authentication.getPrincipal() != null) {
+                        try {
+                                Object principal = authentication.getPrincipal();
+                                if (principal instanceof Long) {
+                                        return (Long) principal;
+                                } else if (principal instanceof String) {
+                                        return Long.parseLong((String) principal);
+                                }
+                        } catch (NumberFormatException e) {
+                                // Log error if needed
+                        }
+                }
+                return null;
         }
 }

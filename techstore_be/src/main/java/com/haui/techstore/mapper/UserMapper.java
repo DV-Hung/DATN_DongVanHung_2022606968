@@ -16,8 +16,10 @@ public class UserMapper {
                 .id(entity.getId())
                 .email(entity.getEmail())
                 .fullName(entity.getFullName())
+                .phone(entity.getPhone())
                 .role(entity.getRole())
                 .createdAt(entity.getCreatedAt())
+                .status(entity.getStatus())
                 .build();
     }
 
