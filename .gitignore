@@ -22,3 +22,5 @@ build/
 *.swp
 *.iml
 .DS_Store
+hs_err_pid15432.log
+replay_pid15432.log
