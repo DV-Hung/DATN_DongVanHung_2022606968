@@ -112,13 +112,13 @@ public class ProductServiceImpl implements ProductService {
                 // Get minimum price for each product from variants
                 Double price1 = p1.getVariants() != null && !p1.getVariants().isEmpty()
                         ? p1.getVariants().stream()
-                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice().doubleValue() : 0.0)
+                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice() : 0.0)
                                 .min().orElse(0.0)
                         : 0.0;
 
                 Double price2 = p2.getVariants() != null && !p2.getVariants().isEmpty()
                         ? p2.getVariants().stream()
-                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice().doubleValue() : 0.0)
+                                .mapToDouble(v -> v.getPrice() != null ? v.getPrice() : 0.0)
                                 .min().orElse(0.0)
                         : 0.0;
 
