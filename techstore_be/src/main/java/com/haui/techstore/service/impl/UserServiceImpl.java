@@ -164,4 +164,9 @@ public class UserServiceImpl implements UserService {
         user.setStatus(status);
         userRepository.save(user);
     }
+
+    @Override
+    public Long getTotalUsersCount() {
+        return userRepository.count();
+    }
 }

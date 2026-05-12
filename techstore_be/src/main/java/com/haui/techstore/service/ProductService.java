@@ -20,11 +20,16 @@ public interface ProductService {
     Page<ProductDTO> filterByBrand(Long brandId, Pageable pageable);
 
     Page<ProductDTO> filterByCategoryWithOptions(Long categoryId, Double minPrice, Double maxPrice,
-            List<String> brandNames, Pageable pageable);
+            List<String> brandNames, String name, String sortBy, Pageable pageable);
 
     ProductDTO create(ProductDTO dto);
 
     ProductDTO update(Long id, ProductDTO dto);
 
     void delete(Long id);
+
+    /**
+     * Get total count of products
+     */
+    Long getTotalProductsCount();
 }
