@@ -65,14 +65,16 @@ public class ProductController {
         }
 
         @GetMapping("/category/{categoryId}")
-        @Operation(summary = "Get products by category with filters", description = "Retrieve products by category ID with optional price range and brand name filters")
+        @Operation(summary = "Get products by category with filters", description = "Retrieve products by category ID with optional price range, brand name, and name search filters")
         public ResponseEntity<ApiResponse<Page<ProductDTO>>> getByCategory(
                         @PathVariable Long categoryId,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size,
                         @RequestParam(required = false) Double minPrice,
                         @RequestParam(required = false) Double maxPrice,
-                        @RequestParam(required = false) String brandNames) {
+                        @RequestParam(required = false) String brandNames,
+                        @RequestParam(required = false) String name,
+                        @RequestParam(required = false) String sortBy) {
                 Pageable pageable = PageRequest.of(page, size);
 
                 // Parse brandNames - split by comma if provided
@@ -81,7 +83,7 @@ public class ProductController {
                                 : null;
 
                 Page<ProductDTO> products = productService.filterByCategoryWithOptions(
-                                categoryId, minPrice, maxPrice, brands, pageable);
+                                categoryId, minPrice, maxPrice, brands, name, sortBy, pageable);
 
                 return ResponseEntity.ok(
                                 new ApiResponse<>(200, "Products retrieved successfully", products));

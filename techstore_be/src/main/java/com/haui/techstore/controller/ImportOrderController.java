@@ -3,6 +3,7 @@ package com.haui.techstore.controller;
 import com.haui.techstore.dto.ApiResponse;
 import com.haui.techstore.dto.ImportOrderDTO;
 import com.haui.techstore.service.ImportOrderService;
+import com.haui.techstore.service.SystemLogsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,7 @@ import java.util.List;
 public class ImportOrderController {
 
     private final ImportOrderService importOrderService;
+    private final SystemLogsService systemLogsService;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('STAFF')")
@@ -32,12 +34,37 @@ public class ImportOrderController {
             @Valid @RequestBody ImportOrderDTO dto,
             Authentication authentication) {
 
-        // Extract user ID from authentication
-        // Long userId = ((Number) authentication.getPrincipal()).longValue();
+        Long currentUserId = extractUserIdFromAuth(authentication);
+        ImportOrderDTO createdOrder = importOrderService.createImportOrder(dto, currentUserId);
 
-        ImportOrderDTO createdOrder = importOrderService.createImportOrder(dto, Long.valueOf(1L));
+        // Log the import order creation
+        systemLogsService.saveLog(
+                currentUserId,
+                "CREATE_IMPORT_ORDER",
+                "import_orders",
+                createdOrder.getId(),
+                null,
+                "Import order created with " + (dto.getImportDetails() != null ? dto.getImportDetails().size() : 0)
+                        + " items");
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(201, "Import order created successfully", createdOrder));
+    }
+
+    private Long extractUserIdFromAuth(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() != null) {
+            try {
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof Long) {
+                    return (Long) principal;
+                } else if (principal instanceof String) {
+                    return Long.parseLong((String) principal);
+                }
+            } catch (NumberFormatException e) {
+                // Log error if needed
+            }
+        }
+        return null;
     }
 
     @GetMapping("/{id}")
