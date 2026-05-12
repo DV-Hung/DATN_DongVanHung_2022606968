@@ -35,7 +35,13 @@ class APIClient {
         // Handle authentication errors
         if (error.response?.status === 401) {
           localStorage.removeItem('authToken');
-          window.location.href = '/login';
+          // LẤY ĐƯỜNG DẪN HIỆN TẠI
+          const currentPath = window.location.pathname;
+
+          // CHỈ CHUYỂN HƯỚNG NẾU KHÔNG PHẢI ĐANG Ở TRANG LOGIN
+          if (currentPath !== '/login' && currentPath !== '/auth/login') {
+            window.location.href = '/login';
+          }
         }
 
         // Log error details for debugging
@@ -122,20 +128,36 @@ class APIClient {
   }
 
   // Cart endpoints
-  getCart() {
-    return this.instance.get('/cart');
+  addToCart(userId: number | string, variantId: number | string, quantity: number = 1) {
+    return this.instance.post('/cart/add', null, {
+      params: { userId, variantId, quantity }
+    });
   }
 
-  addToCart(productId: string, quantity: number) {
-    return this.instance.post('/cart', { productId, quantity });
+  getCart(userId: number | string) {
+    return this.instance.get(`/cart/user/${userId}`);
   }
 
-  updateCartItem(productId: string, quantity: number) {
-    return this.instance.put(`/cart/${productId}`, { quantity });
+  getCartItem(cartItemId: number | string) {
+    return this.instance.get(`/cart/${cartItemId}`);
   }
 
-  removeFromCart(productId: string) {
-    return this.instance.delete(`/cart/${productId}`);
+  updateCartItem(cartItemId: number | string, quantity: number) {
+    return this.instance.put(`/cart/${cartItemId}`, null, {
+      params: { quantity }
+    });
+  }
+
+  removeFromCart(cartItemId: number | string) {
+    return this.instance.delete(`/cart/${cartItemId}`);
+  }
+
+  clearCart(userId: number | string) {
+    return this.instance.delete(`/cart/user/${userId}`);
+  }
+
+  getCartSummary(userId: number | string) {
+    return this.instance.get(`/cart/user/${userId}/summary`);
   }
 
   // Order endpoints
@@ -271,6 +293,15 @@ class APIClient {
 
   deleteImage(publicId: string) {
     return this.instance.delete(`/files/${publicId}`);
+  }
+
+  // Dashboard endpoints
+  getDashboardStatsByYear(year: number) {
+    return this.instance.get(`/dashboard/stats/${year}`);
+  }
+
+  getAvailableYears() {
+    return this.instance.get('/dashboard/available-years');
   }
 
   // Generic methods for flexible API calls

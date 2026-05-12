@@ -5,17 +5,11 @@ export interface AdminUser {
   id: string | number;
   name: string;
   email: string;
+  phone: string;
   role: 'admin' | 'moderator' | 'customer' | 'support';
   status: 'active' | 'inactive' | 'suspended';
   joinDate: string;
-  lastLogin: string;
   orders: number;
-}
-
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
 }
 
 export const useAdminUsers = () => {
@@ -28,22 +22,20 @@ export const useAdminUsers = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiClient.getAllBrands(); // Using brands as fallback since there's no getAllUsers endpoint that returns what we need
-      // For now, we'll use mock data or fetch from /api/users endpoint
-      const result = await apiClient.instance.get('/users/all');
+      const result = await apiClient.get('/users/all');
       const data = result.data?.data || result.data || [];
-      
+
       const mappedUsers: AdminUser[] = Array.isArray(data) ? data.map((user: any) => ({
         id: user.id,
         name: user.fullName || user.name || 'Unknown',
         email: user.email,
+        phone: user.phone || 'N/A',
         role: user.role?.toLowerCase() || 'customer',
         status: user.status?.toLowerCase() || 'active',
-        joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A',
-        lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A',
+        joinDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A',
         orders: 0, // Would need additional API call
       })) : [];
-      
+
       setUsers(mappedUsers);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to fetch users';
@@ -62,7 +54,7 @@ export const useAdminUsers = () => {
   // Update user role
   const updateUserRole = useCallback(async (userId: string | number, role: string) => {
     try {
-      await apiClient.instance.put(`/users/${userId}`, { role });
+      await apiClient.put(`/users/${userId}`, { role });
       setUsers(users.map(u => u.id === userId ? { ...u, role: role as any } : u));
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to update user role';
@@ -71,22 +63,12 @@ export const useAdminUsers = () => {
     }
   }, [users]);
 
+
+
   // Update user status
   const updateUserStatus = useCallback(async (userId: string | number, status: string) => {
     try {
-      await apiClient.instance.put(`/users/${userId}`, { status });
-      setUsers(users.map(u => u.id === userId ? { ...u, status: status as any } : u));
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to update user status';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    }
-  }, [users]);
-
-  // Delete user
-  const deleteUser = useCallback(async (userId: string | number) => {
-    try {
-      await apiClient.instance.delete(`/users/${userId}`);
+      await apiClient.delete(`/users/${userId}`);
       setUsers(users.filter(u => u.id !== userId));
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to delete user';
@@ -102,6 +84,6 @@ export const useAdminUsers = () => {
     fetchUsers,
     updateUserRole,
     updateUserStatus,
-    deleteUser,
+
   };
 };

@@ -121,8 +121,8 @@
     "logisticsPricing": "LOGISTICS & PRICING",
     "merchantSKU": "Merchant SKU",
     "example": "e.g., ARCH-PH-V4-001",
-    "retailPrice": "Retail Price (đ)",
-    "costPrice": "Cost Price (đ)",
+    "retailPrice": "Retail Price ($)",
+    "costPrice": "Cost Price ($)",
     "initialStock": "Initial Stock",
     "currentStock": "Current Stock",
     "isRequired": "is required",
@@ -148,9 +148,8 @@
     "sampleName": "Alex Rivera",
     "sampleRole": "System Admin",
     "techStore": "Tech Store",
-    "profile": "My Profile",
     "orders": "My Orders",
-    "admin": "Admin Panel",
+    "admin": "System Management",
     "logout": "Logout"
   },
   "filters": {
@@ -191,7 +190,6 @@
     "viewAll": "View All →",
     "highPerformanceLaptops": "High-Performance Laptops",
     "precisionEngineered": "Precision engineered computing for developers, designers, and visionaries.",
-    "browseCategory": "Browse our collection of products",
     "showing": "Showing {{from}} to {{to}} of {{total}} products",
     "sortBy": "SORT BY",
     "featured": "Featured",
@@ -258,26 +256,7 @@
     "storage": "Storage",
     "display": "Display",
     "outOfStock": "Out of Stock",
-    "add": "Add"
-  },
-  "orderTracking": {
-    "phoneNumber": "Phone Number",
-    "phonePlaceholder": "0123456789",
-    "phoneRequired": "Please enter a phone number",
-    "search": "Search",
-    "searching": "Searching...",
-    "description": "Enter your phone number to find your orders",
-    "noOrdersFound": "No orders found",
-    "noOrdersDescription": "Please check your phone number and try again",
-    "errorSearching": "Error searching for orders",
-    "ordersFound": "Found {{count}} order(s)",
-    "foundOrders": "Found {{count}} order(s)",
-    "customerInfo": "Customer Information",
-    "orderStatus": "Order Status",
-    "items": "Items",
-    "quantity": "Quantity",
-    "noItems": "No items",
-    "helpText": "Enter your phone number to view your order details"
+    "viewDetails": "View Details"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -322,57 +301,5 @@
     "backToLogin": "Back to Login",
     "tryAnotherEmail": "Try Another Email",
     "resetError": "Failed to send reset link"
-  },
-  "orders": {
-    "myOrders": "My Orders",
-    "totalOrders": "Total Orders",
-    "orderUnit": "order(s)",
-    "loading": "Loading orders...",
-    "noOrders": "No Orders Yet",
-    "noOrdersDesc": "You haven't placed any orders yet. Start shopping now!",
-    "continueShopping": "Continue Shopping",
-    "errorFetchingOrders": "Error fetching orders",
-    "cancelSuccess": "Order cancelled successfully",
-    "cancelError": "Failed to cancel order",
-    "requireLogin": "Please Log In",
-    "requireLoginDesc": "You need to log in to view your orders"
-  },
-  "order": {
-    "moreItems": "more items",
-    "code": "Order Code",
-    "date": "Order Date",
-    "total": "Total",
-    "hideDetails": "Hide Details",
-    "viewDetails": "View Details",
-    "cancel": "Cancel Order",
-    "cancelling": "Cancelling...",
-    "confirmCancel": "Confirm Cancel",
-    "cancelWarning": "Are you sure you want to cancel this order? This action cannot be undone.",
-    "customerInfo": "Customer Information",
-    "name": "Name",
-    "phone": "Phone",
-    "email": "Email",
-    "address": "Address",
-    "items": "Items",
-    "additionalInfo": "Additional Information",
-    "shippingMethod": "Shipping Method",
-    "paymentMethod": "Payment Method",
-    "notes": "Notes",
-    "status": {
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "shipped": "Shipped",
-      "delivered": "Delivered",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    },
-    "filter": {
-      "all": "All"
-    }
-  },
-  "common": {
-    "cancel": "Cancel",
-    "previous": "Previous",
-    "next": "Next"
   }
 }

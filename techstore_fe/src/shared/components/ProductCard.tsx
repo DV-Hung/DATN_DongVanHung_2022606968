@@ -192,7 +192,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
             : 'bg-gray-200 text-gray-500 cursor-not-allowed'
             }`}
         >
-          {product.inStock ? t('productCard.add') : t('productCard.outOfStock')}
+          {product.inStock ? t('productCard.viewDetails') : t('productCard.outOfStock')}
         </button>
       </div>
     </div>

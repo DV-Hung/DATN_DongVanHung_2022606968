@@ -24,19 +24,6 @@ export const BRAND_OPTIONS = [
   { value: 'lenovo', label: 'Lenovo' },
 ];
 
-export const PROCESSOR_OPTIONS = [
-  { value: 'intel-core-i9', label: 'Intel Core i9' },
-  { value: 'intel-core-i7', label: 'Intel Core i7' },
-  { value: 'apple-m3', label: 'Apple M3 Pro' },
-  { value: 'amd-ryzen-9', label: 'AMD Ryzen 9' },
-];
-
-export const MEMORY_OPTIONS = [
-  { value: '16gb', label: '16GB' },
-  { value: '32gb', label: '32GB' },
-  { value: '64gb', label: '64GB' },
-  { value: '128gb', label: '128GB' },
-];
 
 export const PRICE_RANGES = {
   min: 500,
@@ -44,7 +31,7 @@ export const PRICE_RANGES = {
 };
 
 // Pagination
-export const DEFAULT_PAGE_SIZE = 12;
+export const DEFAULT_PAGE_SIZE = 10;
 
 // API Endpoints
 export const API_ENDPOINTS = {

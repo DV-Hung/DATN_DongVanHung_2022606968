@@ -5,6 +5,7 @@ export interface User {
   id: number;
   email: string;
   fullName: string;
+  phone?: string;
   role: string;
   status: string;
   createdAt?: string;
@@ -17,7 +18,7 @@ export interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (fullName: string, email: string, password: string) => Promise<void>;
+  register: (fullName: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
 }
@@ -40,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const storedToken = localStorage.getItem('authToken');
         const storedUser = localStorage.getItem('authUser');
-        
+
         if (storedToken && storedUser) {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
@@ -62,14 +63,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     try {
       const response = await apiClient.login(email, password);
-      
+
       if (response.data && response.data.data) {
         const { user: userData, token: tokenData } = response.data.data;
-        
+
         // Store in state
         setUser(userData);
         setToken(tokenData);
-        
+
         // Store in localStorage
         localStorage.setItem('authToken', tokenData);
         localStorage.setItem('authUser', JSON.stringify(userData));
@@ -78,28 +79,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại';
-      throw new Error(errorMessage);
+      return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const register = useCallback(async (fullName: string, email: string, password: string) => {
+  const register = useCallback(async (fullName: string, email: string, password: string, phone: string) => {
     setLoading(true);
     try {
       const response = await apiClient.register({
         fullName,
         email,
         password,
+        phone,
       });
-      
+
       if (response.data && response.data.data) {
         const { user: userData, token: tokenData } = response.data.data;
-        
+
         // Store in state
         setUser(userData);
         setToken(tokenData);
-        
+
         // Store in localStorage
         localStorage.setItem('authToken', tokenData);
         localStorage.setItem('authUser', JSON.stringify(userData));

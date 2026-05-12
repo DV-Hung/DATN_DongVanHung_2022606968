@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../shared/hooks/useAuth';
@@ -14,13 +14,16 @@ export const LoginPage: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    password: '',
+  });
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
+  // Validation functions
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -28,18 +31,91 @@ export const LoginPage: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
+
+    // Validate email format
+    if (name === 'email') {
+      if (value && !isValidEmail(value)) {
+        setFieldErrors(prev => ({
+          ...prev,
+          email: t('Email không hợp lệ'),
+        }));
+      } else {
+        setFieldErrors(prev => ({
+          ...prev,
+          email: '',
+        }));
+      }
+    }
+
+    // Validate password is not empty
+    if (name === 'password') {
+      if (!value.trim()) {
+        setFieldErrors(prev => ({
+          ...prev,
+          password: t('Mật khẩu không được để trống'),
+        }));
+      } else {
+        setFieldErrors(prev => ({
+          ...prev,
+          password: '',
+        }));
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const newErrors = { email: '', password: '' };
+
+    // Validate email
+    if (!formData.email) {
+      newErrors.email = t('Email không được để trống');
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = t('Email không hợp lệ');
+    }
+
+    // Validate password
+    if (!formData.password) {
+      newErrors.password = t('Mật khẩu không được để trống');
+    }
+
+    setFieldErrors(newErrors);
+
+    // If there are any errors, stop submission
+    if (Object.values(newErrors).some(err => err)) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
-      // Navigation will be handled by the useEffect hook due to isAuthenticated change
+      const result = await login(formData.email, formData.password);
+      if (result && !result.success) {
+        setError(result.message);
+        return;
+      }
+      // Navigate immediately after successful login
+      navigate('/');
     } catch (err: any) {
-      setError(err.message || t('auth.loginError') || 'Đăng nhập thất bại');
+      console.log('Login error:');
+      const errorMessage = err.response?.data?.message || err.message;
+
+      // Provide user-friendly error messages in Vietnamese
+      if (errorMessage?.includes('401') || errorMessage?.includes('Unauthorized')) {
+        setError('Tài khoản hoặc mật khẩu không chính xác');
+      } else if (errorMessage?.includes('not found') || errorMessage?.includes('không tìm thấy')) {
+        setError('Tài khoản này không tồn tại');
+      } else if (errorMessage?.includes('disabled') || errorMessage?.includes('inactive')) {
+        setError('Tài khoản của bạn đã bị khóa');
+      } else {
+        setError(errorMessage || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     } finally {
       setLoading(false);
     }
@@ -65,8 +141,23 @@ export const LoginPage: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+              <div className="flex items-start gap-3 justify-between">
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="text-red-600 text-xl flex-shrink-0">⚠️</span>
+                  <div>
+                    <h3 className="text-red-900 font-semibold text-sm">Lỗi Đăng Nhập</h3>
+                    <p className="text-red-700 text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setError('')}
+                  className="text-red-500 hover:text-red-700 flex-shrink-0 text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           )}
 
@@ -86,10 +177,14 @@ export const LoginPage: React.FC = () => {
                   placeholder={t('auth.emailPlaceholder') || 'name@company.com'}
                   value={formData.email}
                   onChange={handleChange}
-                  required
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+
+                  className={`w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:bg-white transition ${fieldErrors.email ? 'focus:ring-red-500' : 'focus:ring-blue-500'
+                    }`}
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="text-red-600 text-sm mt-1">{fieldErrors.email}</p>
+              )}
             </div>
 
             {/* Password Field */}
@@ -106,10 +201,14 @@ export const LoginPage: React.FC = () => {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
-                  required
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+
+                  className={`w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:bg-white transition ${fieldErrors.password ? 'focus:ring-red-500' : 'focus:ring-blue-500'
+                    }`}
                 />
               </div>
+              {fieldErrors.password && (
+                <p className="text-red-600 text-sm mb-2">{fieldErrors.password}</p>
+              )}
               <button
                 type="button"
                 onClick={handleForgotPassword}
@@ -120,19 +219,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-              />
-              <label htmlFor="rememberMe" className="ml-3 text-sm text-gray-600 cursor-pointer">
-                {t('auth.rememberMe')}
-              </label>
-            </div>
+
 
             {/* Login Button */}
             <button

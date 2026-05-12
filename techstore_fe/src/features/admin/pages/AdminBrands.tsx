@@ -23,6 +23,7 @@ export const AdminBrands: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
+    logo: '',
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{
     id: string | number;
@@ -35,12 +36,14 @@ export const AdminBrands: React.FC = () => {
       setFormData({
         name: brand.name,
         description: brand.description || '',
+        logo: brand.logo || '',
       });
     } else {
       setEditingBrand(null);
       setFormData({
         name: '',
         description: '',
+        logo: '',
       });
     }
     setFormError(null);
@@ -103,15 +106,15 @@ export const AdminBrands: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Brand Management</h1>
-            <p className="text-gray-600 mt-1">Manage and oversee the primary electronics brands in your hardware portfolio.</p>
+            <h1 className="text-3xl font-bold text-gray-900">Quản Lý Nhãn hàng</h1>
+            <p className="text-gray-600 mt-1">Quản lý và giám sát các nhãn hàng điện tử chính trong danh mục sản phẩm của bạn.</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
             disabled={isLoading}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>+</span> Create New Brand
+            <span>+</span> Tạo Nhãn hàng Mới
           </button>
         </div>
       </div>
@@ -126,7 +129,7 @@ export const AdminBrands: React.FC = () => {
       {/* Loading State */}
       {isLoading && (
         <div className="text-center py-12">
-          <p className="text-gray-600">Loading brands...</p>
+          <p className="text-gray-600">Đang tải ...</p>
         </div>
       )}
 
@@ -148,13 +151,13 @@ export const AdminBrands: React.FC = () => {
                     onClick={() => handleOpenModal(brand)}
                     className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium transition flex items-center gap-2"
                   >
-                    ✎ Edit
+                    ✎ Sửa
                   </button>
                   <button
                     onClick={() => setDeleteConfirm({ id: brand.id, name: brand.name })}
                     className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-medium transition flex items-center gap-2"
                   >
-                    🗑️ Delete
+                    🗑️ Xóa
                   </button>
                 </div>
               </div>
@@ -166,12 +169,12 @@ export const AdminBrands: React.FC = () => {
       {/* Empty State */}
       {!isLoading && brands.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-600 mb-4">No brands found. Create your first brand to get started.</p>
+          <p className="text-gray-600 mb-4">Không tìm thấy nhãn hàng nào. Tạo nhãn hàng đầu tiên để bắt đầu.</p>
           <button
             onClick={() => handleOpenModal()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
           >
-            Create New Brand
+            Tạo Nhãn hàng Mới
           </button>
         </div>
       )}
@@ -182,7 +185,7 @@ export const AdminBrands: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">
-                {editingBrand ? 'Edit Brand' : 'Create New Brand'}
+                {editingBrand ? 'Sửa Nhãn hàng' : 'Tạo Nhãn hàng Mới'}
               </h2>
             </div>
 
@@ -195,7 +198,7 @@ export const AdminBrands: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand Name *
+                  Tên Nhãn hàng *
                 </label>
                 <input
                   type="text"
@@ -207,15 +210,17 @@ export const AdminBrands: React.FC = () => {
                 />
               </div>
 
+
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+                  Mô tả
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  placeholder="Brief description of the brand..."
+                  placeholder="Mô tả ngắn gọn về nhãn hàng..."
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -228,14 +233,14 @@ export const AdminBrands: React.FC = () => {
                 disabled={isSaving}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
               >
-                Cancel
+                Hủy
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition disabled:opacity-50"
               >
-                {isSaving ? 'Saving...' : 'Save Brand'}
+                {isSaving ? 'Đang lưu...' : 'Lưu Nhãn hàng'}
               </button>
             </div>
           </div>
@@ -247,9 +252,9 @@ export const AdminBrands: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Confirm Delete</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Xác nhận Xóa</h2>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete the brand <strong>{deleteConfirm.name}</strong>? This action cannot be undone.
+                Bạn có chắc chắn muốn xóa nhãn hàng <strong>{deleteConfirm.name}</strong>? Hành động này không thể hoàn tác.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
@@ -257,14 +262,14 @@ export const AdminBrands: React.FC = () => {
                   disabled={isSaving}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition disabled:opacity-50"
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm.id)}
                   disabled={isSaving}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition disabled:opacity-50"
                 >
-                  {isSaving ? 'Deleting...' : 'Delete'}
+                  {isSaving ? 'Đang xóa...' : 'Xóa'}
                 </button>
               </div>
             </div>

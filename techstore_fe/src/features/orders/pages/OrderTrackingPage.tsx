@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 import { Header, Footer, Toast, Breadcrumb } from '../../../shared/components';
 import { apiClient } from '../../../services/api';
 
@@ -41,7 +42,7 @@ export const OrderTrackingPage: React.FC = () => {
 
         if (!phoneNumber.trim()) {
             setToastMessage({
-                message: t('orderTracking.phoneRequired') || 'Vui lòng nhập số điện thoại',
+                message: 'Vui lòng nhập số điện thoại',
                 type: 'error'
             });
             return;
@@ -51,8 +52,15 @@ export const OrderTrackingPage: React.FC = () => {
         setHasSearched(true);
 
         try {
-            // Use the new search endpoint instead of fetching all orders
-            const response = await apiClient.searchOrdersByPhoneNumber(phoneNumber.trim(), 0, 100);
+            // Call API without authentication (public endpoint)
+            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+            const response = await axios.get(`${API_BASE_URL}/orders/search`, {
+                params: {
+                    phone: phoneNumber.trim(),
+                    page: 0,
+                    size: 100
+                }
+            });
 
             if (response.data?.data) {
                 const orderData = response.data.data;
@@ -60,14 +68,14 @@ export const OrderTrackingPage: React.FC = () => {
 
                 if (allOrders.length === 0) {
                     setToastMessage({
-                        message: t('orderTracking.noOrdersFound') || 'Không tìm thấy đơn hàng nào',
+                        message: 'Không tìm thấy đơn hàng nào',
                         type: 'error'
                     });
                     setOrders([]);
                 } else {
                     setOrders(allOrders);
                     setToastMessage({
-                        message: t('orderTracking.ordersFound', { count: allOrders.length }) || `Tìm thấy ${allOrders.length} đơn hàng`,
+                        message: `Tìm thấy ${allOrders.length} đơn hàng`,
                         type: 'success'
                     });
                 }
@@ -75,7 +83,7 @@ export const OrderTrackingPage: React.FC = () => {
         } catch (error) {
             console.error('Error fetching orders:', error);
             setToastMessage({
-                message: t('orderTracking.errorSearching') || 'Lỗi khi tìm kiếm đơn hàng',
+                message: 'Lỗi khi tìm kiếm đơn hàng',
                 type: 'error'
             });
             setOrders([]);
@@ -149,7 +157,7 @@ export const OrderTrackingPage: React.FC = () => {
                             {t('navigation.orderTracking') || 'Tra cứu đơn hàng'}
                         </h1>
                         <p className="text-gray-600">
-                            {t('orderTracking.description') || 'Nhập số điện thoại để tra cứu thông tin đơn hàng của bạn'}
+                            {'Nhập số điện thoại để tra cứu thông tin đơn hàng của bạn'}
                         </p>
                     </div>
 
@@ -158,14 +166,14 @@ export const OrderTrackingPage: React.FC = () => {
                         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
                                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t('orderTracking.phoneNumber') || 'Số điện thoại'}
+                                    {'Số điện thoại'}
                                 </label>
                                 <input
                                     type="tel"
                                     id="phone"
                                     value={phoneNumber}
                                     onChange={(e) => setPhoneNumber(e.target.value)}
-                                    placeholder={t('orderTracking.phonePlaceholder') || '0123456789'}
+                                    placeholder={'0123456789'}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     disabled={isLoading}
                                 />
@@ -176,7 +184,7 @@ export const OrderTrackingPage: React.FC = () => {
                                     disabled={isLoading}
                                     className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
-                                    {isLoading ? t('orderTracking.searching') || 'Đang tìm kiếm...' : t('orderTracking.search') || 'Tìm kiếm'}
+                                    {isLoading ? 'Đang tìm kiếm...' : 'Tìm kiếm'}
                                 </button>
                             </div>
                         </form>
@@ -191,7 +199,7 @@ export const OrderTrackingPage: React.FC = () => {
                                         <div className="inline-block">
                                             <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
                                         </div>
-                                        <p className="mt-4 text-gray-600">{t('orderTracking.searching') || 'Đang tìm kiếm...'}</p>
+                                        <p className="mt-4 text-gray-600">{'Đang tìm kiếm...'}</p>
                                     </div>
                                 </div>
                             )}
@@ -212,10 +220,10 @@ export const OrderTrackingPage: React.FC = () => {
                                         />
                                     </svg>
                                     <h3 className="text-lg font-semibold text-gray-900">
-                                        {t('orderTracking.noOrdersFound') || 'Không tìm thấy đơn hàng'}
+                                        {'Không tìm thấy đơn hàng'}
                                     </h3>
                                     <p className="text-gray-600 mt-2">
-                                        {t('orderTracking.noOrdersDescription') || 'Vui lòng kiểm tra lại số điện thoại và thử lại'}
+                                        {'Vui lòng kiểm tra lại số điện thoại và thử lại'}
                                     </p>
                                 </div>
                             )}
@@ -223,7 +231,7 @@ export const OrderTrackingPage: React.FC = () => {
                             {!isLoading && orders.length > 0 && (
                                 <div className="space-y-6">
                                     <h2 className="text-2xl font-bold text-gray-900">
-                                        {t('orderTracking.foundOrders', { count: orders.length }) || `Tìm thấy ${orders.length} đơn hàng`}
+                                        {`Tìm thấy ${orders.length} đơn hàng`}
                                     </h2>
 
                                     {orders.map((order) => (
@@ -232,11 +240,11 @@ export const OrderTrackingPage: React.FC = () => {
                                             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 p-6">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div>
-                                                        <p className="text-sm text-gray-600">{t('admin.orderId') || 'Mã đơn hàng'}</p>
+                                                        <p className="text-sm text-gray-600">{'Mã đơn hàng'}</p>
                                                         <p className="text-xl font-bold text-gray-900">{order.orderCode || order.id}</p>
                                                     </div>
                                                     <div className="md:text-right">
-                                                        <p className="text-sm text-gray-600">{t('admin.date') || 'Ngày đặt'}</p>
+                                                        <p className="text-sm text-gray-600">{'Ngày đặt'}</p>
                                                         <p className="text-lg font-semibold text-gray-900">{formatDate(order.createdAt)}</p>
                                                     </div>
                                                 </div>
@@ -247,17 +255,17 @@ export const OrderTrackingPage: React.FC = () => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                                                            {t('orderTracking.customerInfo') || 'Thông tin khách hàng'}
+                                                            {'Thông tin khách hàng'}
                                                         </h4>
                                                         <div className="space-y-1 text-gray-700">
-                                                            <p><span className="font-medium">{t('admin.customerName') || 'Tên khách:'}</span> {order.customerName}</p>
-                                                            <p><span className="font-medium">{t('orderTracking.phoneNumber') || 'Số điện thoại:'}</span> {order.phone}</p>
-                                                            <p><span className="font-medium">{t('auth.email') || 'Email:'}</span> {order.email}</p>
+                                                            <p><span className="font-medium">{'Tên khách hàng:'}</span> {order.customerName}</p>
+                                                            <p><span className="font-medium">{'Số điện thoại:'}</span> {order.phone}</p>
+                                                            <p><span className="font-medium">{'Email:'}</span> {order.email}</p>
                                                         </div>
                                                     </div>
                                                     <div>
                                                         <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                                                            {t('orderTracking.orderStatus') || 'Trạng thái đơn hàng'}
+                                                            {'Trạng thái đơn hàng'}
                                                         </h4>
                                                         <div className="flex flex-col gap-2">
                                                             <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium w-fit ${getStatusColor(order.status)}`}>
@@ -272,7 +280,7 @@ export const OrderTrackingPage: React.FC = () => {
                                             {/* Order Items */}
                                             <div className="p-6">
                                                 <h4 className="text-sm font-semibold text-gray-700 mb-4">
-                                                    {t('orderTracking.items') || 'Chi tiết sản phẩm'}
+                                                    {'Chi tiết sản phẩm'}
                                                 </h4>
                                                 <div className="space-y-4">
                                                     {order.orderItems && order.orderItems.length > 0 ? (
@@ -292,12 +300,12 @@ export const OrderTrackingPage: React.FC = () => {
                                                                 <div className="flex-1 min-w-0">
                                                                     <p className="font-semibold text-gray-900 mb-1">{item.productName}</p>
                                                                     <div className="text-sm text-gray-600 space-y-1">
-                                                                        <p>{t('orderTracking.quantity') || 'Số lượng'}: <span className="font-medium">{item.quantity}</span></p>
+                                                                        <p>{'Số lượng'}: <span className="font-medium">{item.quantity}</span></p>
                                                                         {item.color && (
                                                                             <p>{'Màu sắc'}: <span className="font-medium">{item.color}</span></p>
                                                                         )}
                                                                         {item.rom && (
-                                                                            <p>{t('products.storage') || 'Bộ nhớ'}: <span className="font-medium">{item.rom}</span></p>
+                                                                            <p>{'Bộ nhớ'}: <span className="font-medium">{item.rom}</span></p>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -310,7 +318,7 @@ export const OrderTrackingPage: React.FC = () => {
                                                             </div>
                                                         ))
                                                     ) : (
-                                                        <p className="text-gray-500">{t('orderTracking.noItems') || 'Không có sản phẩm'}</p>
+                                                        <p className="text-gray-500">{'Không có sản phẩm'}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -338,7 +346,7 @@ export const OrderTrackingPage: React.FC = () => {
                                 />
                             </svg>
                             <p className="text-blue-800">
-                                {t('orderTracking.helpText') || 'Nhập số điện thoại liên quan đến đơn hàng để xem chi tiết'}
+                                {'Nhập số điện thoại liên quan đến đơn hàng để xem chi tiết'}
                             </p>
                         </div>
                     )}

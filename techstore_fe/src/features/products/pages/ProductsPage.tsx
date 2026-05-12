@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Header,
   Footer,
@@ -10,7 +10,6 @@ import {
   Breadcrumb,
   Toast,
 } from '../../../shared/components';
-import { useCart } from '../../../shared/context/CartContext';
 import { ProductFilter, Product } from '../../../shared/types';
 import { DEFAULT_PAGE_SIZE } from '../../../shared/constants';
 import { apiClient } from '../../../services/api';
@@ -28,6 +27,7 @@ const CATEGORY_MAP: CategoryMap = {
 export const ProductsPage: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Extract category from URL path
   const getCategory = () => {
@@ -38,26 +38,36 @@ export const ProductsPage: React.FC = () => {
   const category = getCategory();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('price-low');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
   const [filters, setFilters] = useState<ProductFilter>({});
-  const { addToCart } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Clear search when category changes
+  useEffect(() => {
+    setSearchQuery('');
+  }, [category]);
 
   // Get category info
   const categoryInfo = CATEGORY_MAP[category] || CATEGORY_MAP.laptops;
 
-  // Fetch products by category with filters - SERVER-SIDE filtering
+  // Fetch products by category with filters - SERVER-SIDE filtering AND sorting
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        // Build query params for server-side filtering
+        // Always fetch by category, apply search filter if exists
         const params: any = {
           page: currentPage - 1, // Server expects 0-based page index
           size: DEFAULT_PAGE_SIZE,
+          sortBy: sortBy, // Add sort parameter to server
         };
+
+        // Add search query if exists
+        if (searchQuery.trim()) {
+          params.name = searchQuery;
+        }
 
         // Add price range filter
         if (filters.priceRange) {
@@ -70,7 +80,7 @@ export const ProductsPage: React.FC = () => {
           params.brandNames = filters.brand.join(',');
         }
 
-        // Call API with filters
+        // Call API with category (always search within category)
         const response = await apiClient.getProductsByCategory(categoryInfo.id, params);
 
         const data = response.data?.data || {};
@@ -112,24 +122,10 @@ export const ProductsPage: React.FC = () => {
     };
 
     fetchProducts();
-  }, [category, categoryInfo.id, currentPage, filters]);
+  }, [category, categoryInfo.id, currentPage, filters, searchQuery, sortBy]);
 
   // Calculate pagination
   const totalPages = Math.ceil(totalProducts / DEFAULT_PAGE_SIZE);
-
-  // Sort products locally after fetching
-  const sortedProducts = useMemo(() => {
-    const sorted = [...products];
-
-    switch (sortBy) {
-      case 'price-low':
-        return sorted.sort((a, b) => a.price - b.price);
-      case 'price-high':
-        return sorted.sort((a, b) => b.price - a.price);
-      default:
-        return sorted;
-    }
-  }, [products, sortBy]);
 
   // Handle filter change - RESET to page 1 and fetch new data
   const handleFilterChange = (newFilters: ProductFilter) => {
@@ -138,36 +134,16 @@ export const ProductsPage: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    if (query) {
-      // Filter locally from current loaded products
-      const searched = products.filter(
-        (p) => p.name.toLowerCase().includes(query.toLowerCase())
-      );
-      // You can update this to be server-side search if needed
-      setCurrentPage(1);
-    } else {
-      // Reset if search is cleared
-      setCurrentPage(1);
-    }
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when search changes
   };
 
   const handleAddToCart = (product: Product, variant?: any) => {
-    addToCart(product, 1);
-    setToastMessage(`Added "${product.name}" to cart`);
-    setTimeout(() => setToastMessage(null), 3000);
+    navigate(`/product/${product.id}`);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <Toast
-          message={toastMessage}
-          type="success"
-          onClose={() => setToastMessage(null)}
-        />
-      )}
-
       {/* Header */}
       <Header onSearchChange={handleSearch} />
 
@@ -187,9 +163,6 @@ export const ProductsPage: React.FC = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               {t(categoryInfo.label)}
             </h1>
-            <p className="text-gray-600">
-              {t('products.browseCategory')}
-            </p>
           </div>
 
           {/* Filters and Products Container */}
@@ -244,7 +217,7 @@ export const ProductsPage: React.FC = () => {
               )}
 
               {/* No Results State */}
-              {!isLoading && sortedProducts.length === 0 && (
+              {!isLoading && products.length === 0 && (
                 <div className="text-center py-16 bg-white rounded-lg">
                   <svg
                     className="w-16 h-16 mx-auto text-gray-300 mb-4"
@@ -269,10 +242,10 @@ export const ProductsPage: React.FC = () => {
               )}
 
               {/* Products Grid */}
-              {!isLoading && sortedProducts.length > 0 && (
+              {!isLoading && products.length > 0 && (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    {sortedProducts.map((product) => (
+                    {products.map((product) => (
                       <ProductCard
                         key={product.id}
                         product={product}

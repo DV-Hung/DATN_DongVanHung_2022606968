@@ -7,7 +7,6 @@ import { ProductsPage } from './features/products/pages/ProductsPage';
 import ProductDetailsPage from './features/products/pages/ProductDetailsPage';
 import CartPage from './features/cart/pages/CartPage';
 import CheckoutPage from './features/checkout/pages/CheckoutPage';
-import { OrderTrackingPage, OrdersPage } from './features/orders/pages';
 import { AdminDashboard } from './features/admin/pages/AdminDashboard';
 import { AdminProducts } from './features/admin/pages/AdminProducts';
 import { AdminBrands } from './features/admin/pages/AdminBrands';
@@ -17,6 +16,9 @@ import { AdminProductVariants } from './features/admin/pages/AdminProductVariant
 import { AdminOrders } from './features/admin/pages/AdminOrders';
 import { AdminUsers } from './features/admin/pages/AdminUsers';
 import { LoginPage, RegisterPage, ForgotPasswordPage } from './features/auth/pages';
+import { OrdersPage, OrderTrackingPage } from './features/orders/pages';
+import { AdminUserDetail } from './features/admin/pages';
+
 
 function App() {
   return (
@@ -34,14 +36,15 @@ function App() {
             <Route path="/products/laptops" element={<ProductsPage />} />
             <Route path="/products/mobile" element={<ProductsPage />} />
             <Route path="/products/accessories" element={<ProductsPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/order-tracking" element={<OrderTrackingPage />} />
+            <Route path="/products/deals" element={<ProductsPage />} />
             <Route path="/product/:id" element={<ProductDetailsPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-tracking" element={<OrderTrackingPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
 
             {/* Admin Routes */}
-            <Route
+            < Route
               path="/admin"
               element={
                 <ProtectedRoute requiredRole="ADMIN">
@@ -102,6 +105,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="ADMIN">
                   <AdminUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users/:id"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminUserDetail />
                 </ProtectedRoute>
               }
             />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 interface AdminSidebarProps {
@@ -17,7 +17,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen })
     { icon: '👥', label: 'admin.users', path: '/admin/users' },
     { icon: '📦', label: 'admin.products', path: '/admin/products' },
     { icon: '🏷️', label: 'admin.brands', path: '/admin/brands' },
-    { icon: '👥', label: 'admin.suppliers', path: '/admin/suppliers' }, { icon: '📥', label: 'admin.inventoryInflow', path: '/admin/inventory-inflow' }, { icon: '🛒', label: 'admin.orders', path: '/admin/orders' },
+    { icon: '🚚', label: 'admin.suppliers', path: '/admin/suppliers' }, { icon: '📥', label: 'admin.inventoryInflow', path: '/admin/inventory-inflow' }, { icon: '🛒', label: 'admin.orders', path: '/admin/orders' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -38,14 +38,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen })
           } fixed lg:translate-x-0 lg:static inset-y-0 left-0 w-64 bg-gray-900 text-white transition-transform duration-300 z-40 flex flex-col`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-gray-800">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">TA</span>
-            </div>
-            <span className="font-bold text-lg">{t('header.techStore')}</span>
+        <Link to="/" className="flex items-center gap-2 whitespace-nowrap px-4 py-6">
+          <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+            <span className="text-white font-bold text-sm">TA</span>
           </div>
-        </div>
+          <span className="font-bold text-lg">{t('app.name')}</span>
+        </Link>
 
         {/* Menu Items */}
         <nav className="flex-1 px-4 py-6 space-y-2">
@@ -68,19 +66,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, setIsOpen })
         </nav>
 
         {/* Bottom Menu */}
-        <div className="px-4 py-6 space-y-2 border-t border-gray-800">
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-            <span className="text-xl">⚙️</span>
-            <span className="font-medium">{t('admin.settings')}</span>
-          </button>
-          <button
-            onClick={() => navigate('/')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-          >
-            <span className="text-xl">🚪</span>
-            <span className="font-medium">{t('admin.logout')}</span>
-          </button>
-        </div>
+
       </aside>
     </>
   );
